@@ -20,9 +20,9 @@ export async function runImport(nav: Nav, input: string) {
     try {
       const d = await draftFromTikTok(url, textWithoutUrl);
       nav.push({ name: "review", draftId: d.id });
-    } catch {
-      nav.toast("TikTok nicht erreichbar – bitte Caption einfügen");
-      nav.openSheet((close) => <ImportSheet close={close} initialMode="text" initialText={textWithoutUrl} hint="tiktok" />);
+    } catch (e) {
+      const msg = (e as Error).message || "TikTok nicht erreichbar";
+      nav.openSheet((close) => <ImportSheet close={close} initialMode="text" initialText={textWithoutUrl} hint="tiktok" hintText={msg} />);
     }
     return;
   }
@@ -43,11 +43,13 @@ export function ImportSheet({
   initialMode = "menu",
   initialText = "",
   hint,
+  hintText,
 }: {
   close: () => void;
   initialMode?: "menu" | "text" | "ocr";
   initialText?: string;
   hint?: "instagram" | "tiktok";
+  hintText?: string;
 }) {
   const nav = useNav();
   const [mode, setMode] = useState(initialMode);
@@ -176,7 +178,9 @@ export function ImportSheet({
         </div>
       )}
       {hintState === "tiktok" && (
-        <div className="mb-3 rounded-[14px] bg-accent-soft p-3.5 text-[14px]">TikTok war gerade nicht erreichbar. Kopiere die Caption und füge sie hier ein.</div>
+        <div className="mb-3 rounded-[14px] bg-accent-soft p-3.5 text-[14px] leading-snug">
+          {(hintText ?? "TikTok war gerade nicht erreichbar").replace(/\.?$/, ".")} Öffne das Video, tippe auf die Beschreibung, halte sie gedrückt und wähle <b>Kopieren</b> – dann hier einfügen.
+        </div>
       )}
       {busy && (
         <div className="mb-3 flex items-center gap-3 rounded-[14px] bg-card p-3.5 text-[15px]">

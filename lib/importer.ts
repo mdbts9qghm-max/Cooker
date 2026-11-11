@@ -13,6 +13,8 @@ export type Draft = {
   editId?: string;
   uncertain: { title: boolean; servings: boolean; macros: boolean };
   source?: string;
+  /** original text the recipe was parsed from (e.g. the TikTok caption) */
+  rawText?: string;
 };
 
 const drafts = new Map<string, Draft>();
@@ -59,7 +61,7 @@ export async function draftFromText(text: string, opts: { origin?: string; photo
   if (opts.photo) r.photos = [opts.photo];
   const tags = guessTags(text);
   r.tags = tags;
-  const d: Draft = { id: uid(), recipe: r, uncertain: parsed.uncertain, source: opts.source };
+  const d: Draft = { id: uid(), recipe: r, uncertain: parsed.uncertain, source: opts.source, rawText: text };
   setDraft(d);
   return d;
 }

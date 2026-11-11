@@ -10,7 +10,7 @@ import { variantOf } from "@/lib/foods-base";
 import { loadMatchContext } from "@/lib/hooks";
 import { dropDraft, getDraft, type Draft } from "@/lib/importer";
 import { baseToRef, computedTotal, gramsFor, normKey, resolveIngredient, scaleMacros } from "@/lib/nutrition";
-import { parseIngredientLine } from "@/lib/parser";
+import { parseIngredientLine, parseRecipeText } from "@/lib/parser";
 import type { FoodRef, Ingredient, Macros, Recipe } from "@/lib/types";
 import { UNITS_FOR_UI, fmtAmount } from "@/lib/units";
 import { compressImage, similarity } from "@/lib/util";
@@ -34,6 +34,7 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [quick, setQuick] = useState("");
   const [newTag, setNewTag] = useState("");
+  const [extra, setExtra] = useState("");
   const quickRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
 
@@ -65,6 +66,35 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
     setR((x) => (x ? { ...x, ingredients: [...x.ingredients, ing] } : x));
     setQuick("");
     quickRef.current?.focus();
+  };
+
+  const mergeExtra = async () => {
+    const text = extra.trim();
+    if (!text) return;
+    const p = parseRecipeText(text);
+    const ctx = await loadMatchContext();
+    const ings = p.ingredients.map((x) => resolveIngredient(x, ctx));
+    if (!ings.length && !p.steps.length) {
+      nav.toast("Darin habe ich keine Zutaten gefunden");
+      return;
+    }
+    setR((x) =>
+      x
+        ? {
+            ...x,
+            ingredients: [...x.ingredients, ...ings],
+            steps: x.steps.length ? x.steps : p.steps,
+            servings: unc.servings && p.servings ? p.servings : x.servings,
+          }
+        : x,
+    );
+    if (p.servings && unc.servings) setUnc((u) => ({ ...u, servings: false }));
+    if (p.creatorMacros && !useCreator) {
+      setCreator(p.creatorMacros);
+      setUseCreator(true);
+    }
+    setExtra("");
+    nav.toast(`${ings.length} Zutaten erkannt`);
   };
 
   const learnMapping = async (ing: Ingredient, food: FoodRef) => {
@@ -212,6 +242,45 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
       </div>
 
       {draft.source && <p className="mt-3 px-1 text-[13px] text-muted">Importiert aus {draft.source}. Orange markierte Felder bitte kurz prüfen.</p>}
+
+      {draft.rawText && r.ingredients.length < 2 && (
+        <div className="mt-3 rounded-[18px] border border-accent/40 bg-accent-soft p-4">
+          <div className="mb-1 flex items-center gap-2 text-[16px] font-semibold">
+            <Icon name="info" size={20} className="text-accent" /> Kein Rezept in der Beschreibung
+          </div>
+          <p className="mb-3 text-[14px] leading-snug text-white/80">
+            {draft.source === "TikTok"
+              ? "Die TikTok-Beschreibung enthält keine Zutatenliste – das Rezept steht wohl im Video, in den Kommentaren oder hinter „mehr“. Kopiere den Rezepttext und füge ihn hier ein."
+              : "Füge den Rezepttext (Zutaten und Schritte) hier ein."}
+          </p>
+          <textarea value={extra} onChange={(e) => setExtra(e.target.value)} rows={5} placeholder={"200 g Nudeln\n150 g Hähnchenbrust\n…"} className="field mb-2 resize-none" />
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="secondary"
+              icon="clipboard"
+              onClick={async () => {
+                try {
+                  const t = await navigator.clipboard.readText();
+                  if (t.trim()) setExtra(t);
+                } catch {
+                  nav.toast("Bitte lange ins Feld tippen und „Einfügen“ wählen");
+                }
+              }}
+            >
+              Einfügen
+            </Button>
+            <Button disabled={!extra.trim()} onClick={mergeExtra}>
+              Erkennen
+            </Button>
+          </div>
+        </div>
+      )}
+      {draft.rawText && (
+        <details className="mt-3 rounded-[14px] bg-card px-4 py-2.5 text-[14px]">
+          <summary className="cursor-pointer text-muted">Original-Text anzeigen</summary>
+          <p className="mt-2 whitespace-pre-wrap leading-relaxed text-white/80">{draft.rawText.trim() || "(leer – die Quelle hat keinen Text geliefert)"}</p>
+        </details>
+      )}
 
       {/* Titel & Portionen */}
       <input
