@@ -36,7 +36,7 @@ async function resolve(url: string): Promise<{ final: string; id: string | null 
   }
 }
 
-type OEmbed = { title?: string; author_name?: string; author_unique_id?: string; thumbnail_url?: string };
+type OEmbed = { title?: string; author_name?: string; author_unique_id?: string; thumbnail_url?: string; html?: string; code?: number; status_msg?: string };
 
 async function oembed(target: string): Promise<{ ok: true; data: OEmbed } | { ok: false; status: number }> {
   try {
@@ -46,6 +46,8 @@ async function oembed(target: string): Promise<{ ok: true; data: OEmbed } | { ok
     });
     if (!res.ok) return { ok: false, status: res.status };
     const data = (await res.json()) as OEmbed;
+    // TikTok antwortet bei Problemen teils mit HTTP 200 und einem Fehler-Objekt – das zählt nicht als Erfolg
+    if (!data || (!data.title && !data.author_name && !data.html && !data.thumbnail_url)) return { ok: false, status: data?.code ?? 204 };
     return { ok: true, data };
   } catch {
     return { ok: false, status: 0 };
@@ -59,15 +61,18 @@ export async function GET(req: Request) {
 
   const clean = url.split("?")[0];
   const { final, id } = await resolve(clean);
+  // Reihenfolge: aufgelöster Original-Link (mit echtem Benutzernamen) zuerst
   const candidates = [
-    ...(id ? [`https://www.tiktok.com/@tiktok/video/${id}`] : []),
     final.split("?")[0],
     clean,
+    ...(id ? [`https://www.tiktok.com/@/video/${id}`, `https://www.tiktok.com/video/${id}`, `https://m.tiktok.com/v/${id}.html`] : []),
   ].filter((c, i, a) => isTikTok(c) && a.indexOf(c) === i);
 
   let lastStatus = 0;
+  const attempts: { url: string; status: number }[] = [];
   for (const c of candidates) {
     const r = await oembed(c);
+    attempts.push({ url: c, status: r.ok ? 200 : r.status });
     if (r.ok) {
       return NextResponse.json({
         caption: typeof r.data.title === "string" ? r.data.title : "",
@@ -78,7 +83,12 @@ export async function GET(req: Request) {
     lastStatus = r.status;
   }
   return NextResponse.json(
-    { error: lastStatus ? `TikTok hat das Video nicht herausgegeben (Fehler ${lastStatus})` : "TikTok nicht erreichbar", tried: candidates },
+    {
+      error: lastStatus ? `TikTok hat das Video nicht herausgegeben (Fehler ${lastStatus})` : "TikTok nicht erreichbar",
+      resolved: final,
+      videoId: id,
+      attempts,
+    },
     { status: 502 },
   );
 }

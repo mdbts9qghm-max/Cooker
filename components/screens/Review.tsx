@@ -243,13 +243,15 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
 
       {draft.source && <p className="mt-3 px-1 text-[13px] text-muted">Importiert aus {draft.source}. Orange markierte Felder bitte kurz prüfen.</p>}
 
-      {draft.rawText && r.ingredients.length < 2 && (
+      {draft.rawText !== undefined && r.ingredients.length < 2 && (
         <div className="mt-3 rounded-[18px] border border-accent/40 bg-accent-soft p-4">
           <div className="mb-1 flex items-center gap-2 text-[16px] font-semibold">
             <Icon name="info" size={20} className="text-accent" /> Kein Rezept in der Beschreibung
           </div>
           <p className="mb-3 text-[14px] leading-snug text-white/80">
-            {draft.source === "TikTok"
+            {draft.source === "TikTok" && !draft.rawText.trim()
+              ? "TikTok hat für dieses Video keine Beschreibung geliefert. Öffne das Video, tippe auf die Beschreibung, halte sie gedrückt und wähle „Kopieren“ – oder kopiere das Rezept aus den Kommentaren – und füge es hier ein."
+              : draft.source === "TikTok"
               ? "Die TikTok-Beschreibung enthält keine Zutatenliste – das Rezept steht wohl im Video, in den Kommentaren oder hinter „mehr“. Kopiere den Rezepttext und füge ihn hier ein."
               : "Füge den Rezepttext (Zutaten und Schritte) hier ein."}
           </p>
@@ -275,7 +277,7 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
           </div>
         </div>
       )}
-      {draft.rawText && (
+      {draft.rawText !== undefined && (
         <details className="mt-3 rounded-[14px] bg-card px-4 py-2.5 text-[14px]">
           <summary className="cursor-pointer text-muted">Original-Text anzeigen</summary>
           <p className="mt-2 whitespace-pre-wrap leading-relaxed text-white/80">{draft.rawText.trim() || "(leer – die Quelle hat keinen Text geliefert)"}</p>
