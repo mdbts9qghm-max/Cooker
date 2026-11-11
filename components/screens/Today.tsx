@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Icon } from "../icons";
 import { Screen, SheetHeader, useNav } from "../nav";
 import { Button, EmptyState, HalfRing, IconButton, MACRO_META, MacroBar, RecipeImage, Stepper, cx } from "../ui";
-import { ImportSheet, runImport } from "./ImportSheet";
+import { ImportSheet } from "./ImportSheet";
 import { RecipePicker } from "./Recipes";
 import { db, updateSettings } from "@/lib/db";
 import { BACKUP_INTERVAL, shareBackup } from "@/lib/backup";
@@ -25,20 +25,6 @@ export function TodayScreen() {
   const settings = useSettings();
   const goals = goalsFor(date, settings);
   const totals = dayTotals(entries, recipes);
-  const [clipHint, setClipHint] = useState(false);
-
-  // Nach Rückkehr in die App (z. B. vom Kurzbefehl) Import aus der Zwischenablage anbieten
-  useEffect(() => {
-    const onVis = () => {
-      if (document.visibilityState === "visible") {
-        setClipHint(true);
-        setTimeout(() => setClipHint(false), 45000);
-      }
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
-
   const remaining: Macros = {
     kcal: goals.kcal - totals.kcal,
     protein: goals.protein - totals.protein,
@@ -93,26 +79,6 @@ export function TodayScreen() {
           </button>
         )}
       </p>
-
-      {clipHint && (
-        <button
-          onClick={async () => {
-            setClipHint(false);
-            try {
-              const t = await navigator.clipboard.readText();
-              if (t.trim()) await runImport(nav, t);
-              else nav.toast("Zwischenablage ist leer");
-            } catch {
-              nav.openSheet((close) => <ImportSheet close={close} initialMode="text" />);
-            }
-          }}
-          className="press anim-pop-in mb-3 flex w-full items-center gap-3 rounded-[16px] border border-accent/40 bg-accent-soft px-4 py-3 text-left"
-        >
-          <Icon name="clipboard" size={22} className="text-accent" />
-          <span className="flex-1 text-[15px] font-medium">Rezept aus Zwischenablage importieren</span>
-          <Icon name="chevron" size={16} className="text-accent" />
-        </button>
-      )}
 
       {backupDue && (
         <div className="anim-pop-in mb-3 rounded-[18px] bg-card p-4">
@@ -170,13 +136,13 @@ export function TodayScreen() {
       {/* Mahlzeiten */}
       {allRecipes && allRecipes.length === 0 ? (
         <EmptyState
-          icon="shortcut"
+          icon="book"
           title="Willkommen!"
-          text="Teile ein Reel mit dem Kurzbefehl „Ins Rezeptbuch“ – oder lade erst mal Beispielrezepte zum Ausprobieren."
+          text="Tippe auf das orange Plus, um dein erstes Rezept einzufügen oder selbst anzulegen – oder lade erst mal Beispielrezepte zum Ausprobieren."
           action={
             <div className="flex w-full max-w-[300px] flex-col gap-2.5">
-              <Button onClick={() => nav.push({ name: "shortcut" })} icon="shortcut">
-                Kurzbefehl einrichten
+              <Button onClick={() => nav.openSheet((close) => <ImportSheet close={close} />)} icon="plus">
+                Rezept hinzufügen
               </Button>
               <Button
                 variant="secondary"

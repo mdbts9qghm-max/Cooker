@@ -4,7 +4,7 @@ Persönliche Rezeptbuch- und Wochenplaner-App fürs iPhone, als Web-App (PWA): R
 
 ## Was die App kann
 
-- **Import** über das orange Plus: aus der Zwischenablage (TikTok-Links werden automatisch geladen), Caption-Text, Screenshot (Live Text oder Texterkennung im Browser) oder manuell.
+- **Erfassen** über das orange Plus: **Text einfügen** (kopierte Beschreibung aus Instagram, TikTok & Co.) oder **Selber anlegen**.
 - **Prüf-Bildschirm**: unsichere Erkennungen sind orange markiert, „roh oder gekocht?“ bei Reis, Nudeln, Fleisch usw., Duplikat-Hinweis.
 - **Nährwerte**: zuerst die mitgelieferte Basisliste (≈210 Grundzutaten, USDA), dann Open Food Facts (Suche & Barcode-Scan), eigene Lebensmittel. Eigene Zuordnungen merkt sich die App.
 - **Rezeptbuch** mit Suche, Tags, Favoriten, Sortierung (z. B. Protein pro 100 kcal), Wischen zum Löschen mit Rückgängig, Portionsrechner und Kochmodus (Bildschirm bleibt an).
@@ -33,7 +33,7 @@ Jede neue Änderung, die auf GitHub landet, veröffentlicht Vercel automatisch.
 4. Name „Rezeptbuch“ lassen → **Hinzufügen**.
 5. Öffne die App ab jetzt immer über das neue Symbol auf dem Home-Bildschirm. Nur dort ist sie im Vollbild, und nur dort liegen deine Daten.
 
-Danach: **Einstellungen** (Zahnrad) → **Kurzbefehl „Ins Rezeptbuch“** zeigt dir Schritt für Schritt, wie du Reels direkt teilst.
+Rezepte erfassen: In Instagram/TikTok die Beschreibung gedrückt halten → **Kopieren**, dann im Rezeptbuch **+** → **Text einfügen**. Oder **+** → **Selber anlegen**.
 
 ## Backup
 

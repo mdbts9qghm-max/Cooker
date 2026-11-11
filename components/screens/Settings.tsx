@@ -35,10 +35,6 @@ export function SettingsScreen() {
         <ListRow icon="barcode" title="Eigene Lebensmittel" subtitle={`${foods} angelegt`} onClick={() => nav.push({ name: "foods" })} />
       </Group>
 
-      <h3 className="label mb-2 mt-6 px-1">Import</h3>
-      <Group>
-        <ListRow icon="shortcut" title="Kurzbefehl „Ins Rezeptbuch“" subtitle="Anleitung zum Teilen aus Instagram & TikTok" onClick={() => nav.push({ name: "shortcut" })} />
-      </Group>
 
       <h3 className="label mb-2 mt-6 px-1">Backup</h3>
       <Group>

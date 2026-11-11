@@ -1,11 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Icon, type IconName } from "../icons";
 import { SheetHeader, useNav } from "../nav";
-import { Button, Toggle, cx } from "../ui";
-import { detectUrl, draftFromText, draftFromTikTok, draftManual, ocrImage } from "@/lib/importer";
-import { compressImage } from "@/lib/util";
+import { Button, cx } from "../ui";
+import { detectUrl, draftFromText, draftFromTikTok, draftManual } from "@/lib/importer";
 
 type Nav = ReturnType<typeof useNav>;
 
@@ -46,7 +45,7 @@ export function ImportSheet({
   hintText,
 }: {
   close: () => void;
-  initialMode?: "menu" | "text" | "ocr";
+  initialMode?: "menu" | "text";
   initialText?: string;
   hint?: "instagram" | "tiktok";
   hintText?: string;
@@ -54,75 +53,31 @@ export function ImportSheet({
   const nav = useNav();
   const [mode, setMode] = useState(initialMode);
   const [text, setText] = useState(initialText);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [useAsPhoto, setUseAsPhoto] = useState(false);
-  const [image, setImage] = useState<File | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [hintState, setHint] = useState(hint);
+  const [busy, setBusy] = useState(false);
 
-  const pasteClipboard = async (auto: boolean) => {
+  const paste = async () => {
     try {
       const t = await navigator.clipboard.readText();
-      if (!t.trim()) {
-        nav.toast("Zwischenablage ist leer");
-        return;
-      }
-      const { kind } = detectUrl(t);
-      if (auto && kind === "tiktok") {
-        close();
-        await runImport(nav, t);
-        return;
-      }
-      if (kind === "instagram" && t.trim().split(/\s+/).length < 4) {
-        setHint("instagram");
-        setMode("text");
-        return;
-      }
-      if (auto && t.length > 30) {
-        close();
-        await runImport(nav, t);
-        return;
-      }
-      setText(t);
-      setMode("text");
+      if (t.trim()) setText(t);
+      else nav.toast("Zwischenablage ist leer");
     } catch {
-      nav.toast("Kein Zugriff auf die Zwischenablage – bitte lange tippen und „Einfügen“");
-      setMode("text");
+      nav.toast("Bitte lange ins Textfeld tippen und „Einfügen“ wählen");
     }
   };
 
   const go = async () => {
-    if (!text.trim()) return;
-    setBusy("Wird erkannt …");
-    let photo: string | null = null;
-    if (image && useAsPhoto) photo = await compressImage(image);
+    if (!text.trim() || busy) return;
+    setBusy(true);
     const { url, kind } = detectUrl(text);
-    if (kind === "tiktok" && url) {
+    if (kind === "tiktok" && url && text.replace(url, "").trim().length < 20) {
       close();
       await runImport(nav, text);
       return;
     }
     const clean = url ? text.replace(url, "") : text;
-    const d = await draftFromText(clean, { origin: image ? "ocr" : hintState === "instagram" ? "instagram" : "text", photo, source: hintState === "instagram" ? "Instagram" : undefined });
-    setBusy(null);
+    const d = await draftFromText(clean, { origin: kind === "instagram" ? "instagram" : "text" });
     close();
     nav.push({ name: "review", draftId: d.id });
-  };
-
-  const onImage = async (f: File) => {
-    setImage(f);
-    setMode("ocr");
-    setBusy("Texterkennung lädt …");
-    try {
-      const t = await ocrImage(f, (p) => setBusy(`Text wird erkannt … ${Math.round(p * 100)} %`));
-      setText(t);
-      setMode("text");
-    } catch {
-      nav.toast("Texterkennung fehlgeschlagen – bitte Text mit Live Text kopieren");
-      setMode("text");
-    } finally {
-      setBusy(null);
-    }
   };
 
   if (mode === "menu") {
@@ -141,19 +96,16 @@ export function ImportSheet({
       <div className="px-4">
         <SheetHeader title="Rezept hinzufügen" />
         <div className="space-y-2.5">
-          {opt("clipboard", "Aus Zwischenablage", "Link oder Caption, die du kopiert hast", () => pasteClipboard(true), true)}
-          {opt("text", "Caption-Text einfügen", "Text aus Instagram, TikTok oder Webseite", () => setMode("text"))}
-          {opt("camera", "Screenshot", "Text mit Live Text kopieren oder Bild erkennen lassen", () => fileRef.current?.click())}
-          {opt("edit", "Manuell", "Zutaten einzeln eintippen", () => {
+          {opt("text", "Text einfügen", "Rezepttext aus Instagram, TikTok & Co. kopieren und einfügen", () => setMode("text"), true)}
+          {opt("edit", "Selber anlegen", "Titel, Zutaten und Schritte selbst eintippen", () => {
             const d = draftManual();
             close();
             nav.push({ name: "review", draftId: d.id });
           })}
         </div>
         <p className="mt-4 px-1 text-[13px] leading-relaxed text-muted">
-          Tipp: Mit dem Kurzbefehl „Ins Rezeptbuch“ teilst du Reels direkt aus Instagram oder TikTok. Anleitung unter Einstellungen.
+          Tipp: Beschreibung im Reel antippen, gedrückt halten und „Kopieren“ wählen.
         </p>
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && onImage(e.target.files[0])} />
       </div>
     );
   }
@@ -161,58 +113,36 @@ export function ImportSheet({
   return (
     <div className="px-4">
       <SheetHeader
-        title={mode === "ocr" ? "Screenshot" : "Caption einfügen"}
+        title="Text einfügen"
         onClose={close}
         right={
-          <button disabled={!text.trim() || !!busy} onClick={go} className="press text-[17px] font-semibold text-accent disabled:opacity-40">
+          <button disabled={!text.trim() || busy} onClick={go} className="press text-[17px] font-semibold text-accent disabled:opacity-40">
             Weiter
           </button>
         }
       />
-      {hintState === "instagram" && (
+      {(hint === "instagram" || hint === "tiktok") && (
         <div className="mb-3 flex gap-3 rounded-[14px] bg-accent-soft p-3.5 text-[14px] leading-snug">
           <Icon name="info" size={20} className="mt-0.5 shrink-0 text-accent" />
           <span>
-            Instagram gibt die Caption ohne Login nicht heraus. Öffne das Reel, tippe auf die Caption, halte gedrückt und wähle <b>Kopieren</b> – dann hier einfügen.
+            {hint === "tiktok" ? `${(hintText ?? "TikTok war gerade nicht erreichbar").replace(/\.?$/, ".")} ` : "Ein Link allein reicht nicht. "}
+            Öffne das Video, tippe auf die Beschreibung, halte sie gedrückt und wähle <b>Kopieren</b> – dann hier einfügen.
           </span>
         </div>
       )}
-      {hintState === "tiktok" && (
-        <div className="mb-3 rounded-[14px] bg-accent-soft p-3.5 text-[14px] leading-snug">
-          {(hintText ?? "TikTok war gerade nicht erreichbar").replace(/\.?$/, ".")} Öffne das Video, tippe auf die Beschreibung, halte sie gedrückt und wähle <b>Kopieren</b> – dann hier einfügen.
-        </div>
-      )}
-      {busy && (
-        <div className="mb-3 flex items-center gap-3 rounded-[14px] bg-card p-3.5 text-[15px]">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          {busy}
-        </div>
-      )}
       <textarea
-        autoFocus={!busy && mode === "text" && !text}
+        autoFocus={!text}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={"Caption hier einfügen …\n\nZ. B.\nProtein Bowl\n200 g Hähnchenbrust\n100 g Reis\n…"}
-        className="field min-h-[280px] resize-none leading-relaxed"
+        placeholder={"Rezepttext hier einfügen …\n\nZ. B.\nProtein Bowl\n200 g Hähnchenbrust\n100 g Reis\n…"}
+        className="field min-h-[300px] resize-none leading-relaxed"
       />
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        <Button variant="secondary" icon="clipboard" onClick={() => pasteClipboard(false)}>
-          Einfügen
-        </Button>
-        <Button variant="secondary" icon="camera" onClick={() => fileRef.current?.click()}>
-          Bild erkennen
-        </Button>
-      </div>
-      {image && (
-        <div className="mt-3 flex items-center justify-between rounded-[14px] bg-card px-4 py-3">
-          <span className="text-[15px]">Bild als Rezeptfoto verwenden</span>
-          <Toggle on={useAsPhoto} onChange={setUseAsPhoto} />
-        </div>
-      )}
-      <Button className="mt-4 w-full" disabled={!text.trim() || !!busy} onClick={go}>
-        Rezept erkennen
+      <Button variant="secondary" icon="clipboard" className="mt-3 w-full" onClick={paste}>
+        Aus Zwischenablage einfügen
       </Button>
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && onImage(e.target.files[0])} />
+      <Button className="mt-3 w-full" disabled={!text.trim() || busy} onClick={go}>
+        {busy ? "Wird erkannt …" : "Rezept erkennen"}
+      </Button>
     </div>
   );
 }

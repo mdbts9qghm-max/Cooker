@@ -128,7 +128,7 @@ export function RecipesScreen() {
         <EmptyState
           icon="book"
           title="Noch keine Rezepte"
-          text="Teile ein Reel mit dem Kurzbefehl „Ins Rezeptbuch“ oder tippe auf das orange Plus."
+          text="Tippe auf das orange Plus und füge einen kopierten Rezepttext ein oder lege ein Rezept selbst an."
           action={<Button onClick={() => nav.openSheet((close) => <ImportSheet close={close} />)}>Erstes Rezept hinzufügen</Button>}
         />
       ) : list.length === 0 && recipes ? (
