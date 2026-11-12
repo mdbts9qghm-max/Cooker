@@ -30,7 +30,7 @@ export type ParsedRecipe = {
 // ---------- cleaning ----------
 
 const EMOJI_RE = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{200D}\u{20E3}\u{1F3FB}-\u{1F3FF}]/gu;
-const BULLET_RE = /^\s*(?:[-–—•·▪▫◦●○■□►▶➤➔→>*✓✔☑]+|\d+\s*[.)]|\(\d+\)|step\s*\d+\s*[:.)-]?|schritt\s*\d+\s*[:.)-]?)\s*/i;
+const BULLET_RE = /^\s*(?:[-–—•·▪▫◦●○■□►▶➤➔→>*✓✔☑]+|\d+\s*[.)](?!\d)|\(\d+\)|step\s*\d+\s*[:.)-]?|schritt\s*\d+\s*[:.)-]?)\s*/i;
 
 const JUNK_RE = new RegExp(
   [
@@ -137,7 +137,7 @@ const ingredientStartRe = new RegExp(`^(?:ca\\.?\\s*|~\\s*|etwa\\s*)?${QTY_RE_SR
 const LEAD_RE = new RegExp(`^(?:ca\\.?\\s*|~\\s*|etwa\\s*|about\\s*)?(${QTY_RE_SRC})\\s*(${UNIT_RE_SRC}(?=[\\s.,)(]|$)\\.?)?\\s*(?:of\\s+|von\\s+)?(.*)$`, "i");
 const TRAIL_RE = new RegExp(`^(.*?)[\\s:,–-]+(?:ca\\.?\\s*)?(${QTY_RE_SRC})\\s*(${UNIT_RE_SRC})?\\.?\\s*$`, "i");
 const UNIT_ONLY_LEAD_RE = new RegExp(`^(?:a|an|ein|eine|einen|1)?\\s*(prise|pinch|schuss|spritzer|dash|splash|handvoll|handful|bund|bunch|etwas|some)\\s+(?:of\\s+)?(.*)$`, "i");
-const PAREN_G_RE = /\(\s*(?:ca\.?\s*|~\s*)?(\d+(?:[.,]\d+)?)\s*(g|gr|ml)\s*\)/i;
+const PAREN_G_RE = /\(\s*(?:ca\.?\s*|~\s*|about\s*)?(\d+(?:[.,]\d+)?)\s*(g|gr|ml|oz|ounces?)\s*\)/i;
 
 const NAME_NOISE = /\b(?:optional|nach belieben|nach geschmack|to taste|zum (?:anbraten|garnieren|servieren|bestreuen)|for (?:serving|garnish|frying)|etwas|some|ca\.?|about|frisch(?:e[rsn]?)?|fresh|große?n?|kleine?n?|mittelgroße?n?|large|small|medium|fein(?:e[rsn]?)?|grob(?:e[rsn]?)?|gehackt(?:e[rsn]?)?|gewürfelt(?:e[rsn]?)?|geschnitten(?:e[rsn]?)?|chopped|diced|sliced|minced|grated|gerieben(?:e[rsn]?)?|bio|organic|tk|frozen|tiefgekühlt(?:e[rsn]?)?|reife?n?|ripe)\b/gi;
 
@@ -148,17 +148,28 @@ export function cleanIngredientName(name: string): string {
     .replace(/\s+-\s+.*$/, "")
     .replace(/[*_~]/g, "")
     .replace(/[:.;]+$/, "")
-    .replace(/^\s*(?:of|von)\s+/i, "")
+    .replace(/^\s*(?:of|von|an?)\s+/i, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
   let line = cleanLine(rawLine).replace(BULLET_RE, "").trim();
+  // "juice of 1 lime", "Saft einer Zitrone"
+  const juice = line.match(/^(?:the\s+)?juice\s+(?:of|from)\s+(\S+)\s+(lemons?|limes?|oranges?)\b/i) ?? line.match(/^(?:den\s+)?saft\s+(?:von\s+|aus\s+)?(\S+)\s+(zitronen?|limetten?|orangen?)\b/i);
+  if (juice) {
+    const n = WORD_NUM[juice[1].toLowerCase()] ?? juice[1];
+    const fruit = juice[2].toLowerCase();
+    const name = /orange/.test(fruit) ? "Orangensaft" : /lim/.test(fruit) ? "Limettensaft" : "Zitronensaft";
+    line = `${n} Stück ${name}`;
+  }
+  // "one onion", "a pinch of salt", "zwei Eier" -> digits
+  line = wordNumToDigit(line);
   if (!line || line.length > 140) return null;
   const raw = line;
   const gramsHintM = line.match(PAREN_G_RE);
-  const gramsHint = gramsHintM ? num(gramsHintM[1]) : null;
+  let gramsHint = gramsHintM ? num(gramsHintM[1]) : null;
+  if (gramsHint != null && /^oz|^ounce/i.test(gramsHintM![2])) gramsHint = Math.round(gramsHint * 28.35);
   const stateM = STATE_COOKED_RE.test(line) ? "cooked" : STATE_RAW_RE.test(line) ? "raw" : null;
 
   let amount: number | null = null;
@@ -212,22 +223,43 @@ export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
 }
 
 function looksLikeIngredient(line: string): boolean {
-  const l = cleanLine(line).replace(BULLET_RE, "").replace(/(\d)([a-zA-ZäöüÄÖÜ])/g, "$1 $2");
+  const l = wordNumToDigit(cleanLine(line).replace(BULLET_RE, "").trim()).replace(/(\d)([a-zA-ZäöüÄÖÜ])/g, "$1 $2");
   if (l.length > 90) return false;
   if (ingredientStartRe.test(l)) {
     // a sentence with a verb is more likely a step ("2 Minuten kochen")
     if (/\b(minuten?|min\.?|minutes?|stunden?|hours?|grad|°|degrees)\b/i.test(l)) return false;
     return true;
   }
+  if (/^(?:the\s+)?juice\s+(?:of|from)\s+\S+\s+(?:lemons?|limes?|oranges?)\b|^(?:den\s+)?saft\s+(?:von\s+|aus\s+)?\S+\s+(?:zitronen?|limetten?|orangen?)\b/i.test(l)) return true;
   if (UNIT_ONLY_LEAD_RE.test(l) && l.split(" ").length <= 6 && !/^(etwas|some)\b/i.test(l)) return true;
   if (new RegExp(`[\\s:]${QTY_RE_SRC}\\s*(?:${UNIT_RE_SRC})\\.?\\s*$`, "i").test(l) && l.split(" ").length <= 6) return true;
   return false;
 }
 
 function looksLikeStep(line: string): boolean {
-  const l = cleanLine(line);
-  return l.length > 25 && /\s/.test(l) && (/[.!]$/.test(l) || l.split(" ").length >= 6);
+  const raw = cleanLine(line);
+  const bulleted = /^\s*[-–—•·▪▫◦●○■□►▶➤➔→>*✓✔☑]/.test(raw);
+  const l = raw.replace(BULLET_RE, "").trim();
+  if (l.length <= 25 || !/\s/.test(l)) return false;
+  const words = l.split(" ").length;
+  if (/[.!]$/.test(l)) return true;
+  return bulleted ? words >= 10 : words >= 7;
 }
+
+/** "Sauce:", "Für das Dressing:", "Topping" – short sub-heading inside the ingredient list */
+function isSubHeading(line: string): boolean {
+  const l = cleanLine(line).replace(BULLET_RE, "").trim();
+  return /^[\p{L} &/-]{3,30}:$/u.test(l) && l.split(" ").length <= 4;
+}
+
+function wordNumToDigit(line: string): string {
+  return line.replace(/^([\p{L}]+)\s+(?=\S)/u, (m, w: string) => (WORD_NUM[w.toLowerCase()] ? WORD_NUM[w.toLowerCase()] + " " : m));
+}
+
+const WORD_NUM: Record<string, string> = {
+  a: "1", an: "1", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", twelve: "12", dozen: "12", half: "½",
+  ein: "1", eine: "1", einen: "1", einem: "1", einer: "1", zwei: "2", drei: "3", vier: "4", "fünf": "5", sechs: "6", acht: "8", zehn: "10", halbe: "½", halber: "½", halbes: "½",
+};
 
 /** Split "200g Quark, 1 Banane, 30g Haferflocken" into separate lines */
 function splitInlineList(text: string): string[] {
@@ -291,6 +323,10 @@ export function parseRecipeText(input: string, opts: { titleHint?: string } = {}
     }
     if (JUNK_RE.test(l) && !looksLikeIngredient(l)) continue;
 
+    if ((section === "ing" || section === "none") && isSubHeading(l) && !STEP_HEADER_RE.test(l)) {
+      section = "ing";
+      continue;
+    }
     const ih = l.match(ING_HEADER_RE);
     if (ih && l.length < 60 + (ih[1]?.length ?? 0)) {
       section = "ing";
@@ -398,7 +434,7 @@ function cleanTitle(t: string): string {
   s = s
     .replace(/\(.*?\)/g, " ")
     .replace(/\b(?:ready in|fertig in) \d+.*$/i, "")
-    .replace(/\s*(?:\d+\s*(?:kcal|g protein)).*$/i, "")
+    .replace(/\s*(?:only|nur|just|under|unter)?\s*\d+\s*(?:kcal|cals?|calories|kalorien|g protein)\b.*$/i, "")
     .replace(/\s+(?:recipe|rezept)\s*$/i, "")
     .replace(/[!?.:,]+$/, "")
     .replace(/\s+/g, " ")

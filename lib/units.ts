@@ -87,7 +87,7 @@ export const UNITS_FOR_UI = ["g", "ml", "Stück", "EL", "TL", "Tasse", "Prise", 
 export function toGrams(
   amount: number,
   unit: string | null,
-  opts: { pieceG?: number; elG?: number; override?: number; foodId?: string } = {},
+  opts: { pieceG?: number; elG?: number; cupG?: number; override?: number; foodId?: string } = {},
 ): { grams: number; guess: boolean } {
   if (opts.override && unit && !["g", "kg", "mg", "ml", "l", "cl", "dl", "oz", "lb"].includes(unit)) {
     return { grams: amount * opts.override, guess: false };
@@ -105,7 +105,7 @@ export function toGrams(
     case "lb": return { grams: amount * 453.6, guess: false };
     case "EL": return { grams: amount * el, guess: !opts.elG };
     case "TL": return { grams: (amount * el) / 3, guess: !opts.elG };
-    case "Tasse": return { grams: amount * el * 16, guess: true };
+    case "Tasse": return { grams: amount * (opts.cupG ?? el * 16), guess: !opts.cupG };
     case "Prise": return { grams: amount * 0.5, guess: false };
     case "Spritzer": return { grams: amount * 5, guess: true };
     case "Zehe": return { grams: amount * (opts.pieceG && opts.pieceG < 10 ? opts.pieceG : 4), guess: false };

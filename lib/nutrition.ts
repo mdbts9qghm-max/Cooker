@@ -1,4 +1,4 @@
-import { BASE_FOODS, BASE_BY_ID, hasVariants, variantOf, type BaseFood } from "./foods-base";
+import { BASE_FOODS, BASE_BY_ID, CUP_G, hasVariants, variantOf, type BaseFood } from "./foods-base";
 import type { ParsedIngredient } from "./parser";
 import type { CustomFood, FoodRef, Ingredient, Macros, Recipe } from "./types";
 import { ZERO } from "./types";
@@ -135,6 +135,7 @@ export function gramsFor(
   return toGrams(amount, unit, {
     pieceG: food?.pieceG ?? base?.pieceG,
     elG: base?.elG,
+    cupG: base ? CUP_G[base.id] ?? CUP_G[base.group] : undefined,
     override: ov,
     foodId: food?.id,
   });
