@@ -5,6 +5,11 @@ import { ZERO } from "./types";
 import { toGrams } from "./units";
 import { uid } from "./util";
 
+/** ä→a usw., damit OCR-Text ohne Umlaute ("Hahnchenbrust") trotzdem passt */
+export function foldUmlauts(s: string): string {
+  return s.replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss");
+}
+
 export function normKey(name: string): string {
   return name
     .toLowerCase()
@@ -36,9 +41,13 @@ function singular(w: string): string[] {
 }
 
 /** Score how well a base food matches a normalised name (0 = no match). */
-function scoreBase(f: BaseFood, key: string, words: string[], fullKey?: string): number {
+function scoreBase(f: BaseFood, key0: string, words0: string[], fullKey0?: string): number {
   let best = 0;
-  for (const s of f.syn) {
+  const key = foldUmlauts(key0);
+  const words = words0.map(foldUmlauts);
+  const fullKey = fullKey0 ? foldUmlauts(fullKey0) : undefined;
+  for (const s0 of f.syn) {
+    const s = foldUmlauts(s0);
     if (fullKey && s === fullKey) return 110;
     if (s === key) return 100;
     if (fullKey && fullKey !== key && new RegExp(`(^|\\s)${escapeRe(s)}(?:s|n|en|e|es)?($|\\s)`).test(fullKey)) best = Math.max(best, 52 + s.length);

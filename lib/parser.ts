@@ -434,6 +434,7 @@ function cleanTitle(t: string): string {
   s = s
     .replace(/\(.*?\)/g, " ")
     .replace(/\b(?:ready in|fertig in) \d+.*$/i, "")
+    .replace(/\s*[-–|,]?\s*\b(?:makes|serves|yields?|für|ergibt|reicht für)\s+\d+\b.*$/i, "")
     .replace(/\s*(?:only|nur|just|under|unter)?\s*\d+\s*(?:kcal|cals?|calories|kalorien|g protein)\b.*$/i, "")
     .replace(/\s+(?:recipe|rezept)\s*$/i, "")
     .replace(/[!?.:,]+$/, "")
