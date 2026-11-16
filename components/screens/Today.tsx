@@ -211,7 +211,7 @@ function MealCard({ entry, onSwap }: { entry: PlanEntry; onSwap: () => void }) {
 
   return (
     <div
-      className="press anim-pop-in flex items-center gap-3 rounded-[18px] bg-card p-2.5 pr-3"
+      className="press anim-pop-in flex items-center gap-3 rounded-[16px] bg-card px-3 py-2.5"
       onTouchStart={start}
       onTouchEnd={cancel}
       onTouchMove={cancel}
@@ -221,7 +221,7 @@ function MealCard({ entry, onSwap }: { entry: PlanEntry; onSwap: () => void }) {
         if (info.recipe) nav.push({ name: "recipe", id: info.recipe.id });
       }}
     >
-      <RecipeImage src={info.photo} title={info.title} className="h-[68px] w-[68px] shrink-0" rounded="rounded-[14px]" />
+      <RecipeImage src={info.photo} title={info.title} className="h-11 w-11 shrink-0" rounded="rounded-[11px]" />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[16px] font-semibold">{info.title}</div>
         <div className="tnum mt-0.5 text-[13px] text-muted">

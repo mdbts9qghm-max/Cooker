@@ -221,16 +221,16 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
       }
     >
       {/* Foto */}
-      <div className="relative mt-1">
-        <button onClick={() => photoRef.current?.click()} className="press block w-full">
-          <RecipeImage src={r.photos[0]} title={r.title || "Neu"} className="h-[180px] w-full" rounded="rounded-[20px]" />
-          <span className="blurbar absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold">
-            <Icon name="camera" size={16} /> {r.photos[0] ? "Foto ändern" : "Foto hinzufügen"}
-          </span>
+      <div className="mt-1 flex items-center gap-3">
+        <button onClick={() => photoRef.current?.click()} className="press shrink-0">
+          <RecipeImage src={r.photos[0]} title={r.title || "Neu"} className="h-14 w-14" rounded="rounded-[12px]" />
+        </button>
+        <button onClick={() => photoRef.current?.click()} className="press flex items-center gap-1.5 text-[15px] text-accent">
+          <Icon name="camera" size={18} /> {r.photos[0] ? "Foto ändern" : "Foto hinzufügen"}
         </button>
         {r.photos[0] && (
-          <button onClick={() => update({ photos: r.photos.slice(1) })} className="blurbar absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-full">
-            <Icon name="x" size={16} />
+          <button onClick={() => update({ photos: r.photos.slice(1) })} className="press ml-auto text-[15px] text-muted">
+            Entfernen
           </button>
         )}
         <input

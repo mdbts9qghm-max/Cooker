@@ -138,32 +138,29 @@ export function RecipesScreen() {
           <p className="mb-2 px-1 text-[12px] text-muted">
             {list.length} {list.length === 1 ? "Rezept" : "Rezepte"} · {SORTS.find((s) => s.value === sort)?.label} · nach links wischen zum Löschen
           </p>
-          <div className="grid grid-cols-2 gap-3">
-            {list.map(({ r, m }, i) => (
-              <SwipeRow key={r.id} className="rounded-[18px] bg-card" actions={[{ label: "Löschen", color: "var(--color-danger)", onAction: () => remove(r) }]}>
+          <div className="divide-y divide-line overflow-hidden rounded-[16px] bg-card">
+            {list.map(({ r, m }) => (
+              <SwipeRow key={r.id} className="bg-card" actions={[{ label: "Löschen", color: "var(--color-danger)", onAction: () => remove(r) }]}>
                 <button
                   onClick={() => {
                     haptic();
                     nav.push({ name: "recipe", id: r.id });
                   }}
-                  className="anim-pop-in block w-full bg-card text-left"
-                  style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
+                  className="flex w-full items-center gap-3 bg-card px-3 py-2.5 text-left active:bg-white/5"
                 >
-                  <div className="relative">
-                    <RecipeImage src={r.photos[0]} title={r.title} className="aspect-[4/5] w-full" rounded="rounded-t-[18px]" />
-                    {r.favorite && (
-                      <span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/45 text-accent backdrop-blur">
-                        <Icon name="heart" size={15} fill="currentColor" />
-                      </span>
-                    )}
-                  </div>
-                  <div className="px-3 pb-3 pt-2.5">
-                    <div className="line-clamp-2 min-h-[40px] text-[15px] font-semibold leading-tight">{r.title}</div>
-                    <div className="tnum mt-1.5 flex items-center gap-2 text-[13px]">
-                      <span className="font-semibold">{Math.round(m.kcal)} kcal</span>
-                      <span className="text-protein font-semibold">{Math.round(m.protein)} g P</span>
-                    </div>
-                  </div>
+                  <RecipeImage src={r.photos[0]} title={r.title} className="h-[52px] w-[52px] shrink-0" rounded="rounded-[11px]" />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-[16px] font-semibold">{r.title}</span>
+                      {r.favorite && <Icon name="heart" size={14} fill="currentColor" className="shrink-0 text-accent" />}
+                    </span>
+                    <span className="tnum mt-0.5 flex min-w-0 items-center gap-2 whitespace-nowrap text-[13px]">
+                      <span className="shrink-0 font-semibold">{Math.round(m.kcal)} kcal</span>
+                      <span className="shrink-0 font-semibold text-protein">{Math.round(m.protein)} g P</span>
+                      {r.tags[0] && <span className="min-w-0 truncate text-muted">· {r.tags.slice(0, 2).join(", ")}</span>}
+                    </span>
+                  </span>
+                  <Icon name="chevron" size={16} className="shrink-0 text-faint" />
                 </button>
               </SwipeRow>
             ))}

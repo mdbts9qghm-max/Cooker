@@ -77,17 +77,17 @@ export function RecipeDetail({ id }: { id: string }) {
     }
   };
 
-  const headerSolid = scrollY > 220;
+  const headerSolid = scrollY > 60;
 
   return (
     <div className="absolute inset-0 bg-bg">
       {/* floating nav */}
-      <div className={cx("absolute inset-x-0 top-0 z-30 flex items-center justify-between px-2 transition-colors", headerSolid ? "blurbar border-b border-line/70" : "")} style={{ paddingTop: "var(--sat)" }}>
-        <button onClick={nav.pop} className={cx("press m-1 grid h-9 w-9 place-items-center rounded-full", !headerSolid && "bg-black/45 backdrop-blur")}>
-          <Icon name="back" size={22} stroke={2.4} className="text-white" />
+      <div className={cx("absolute inset-x-0 top-0 z-30 flex items-center justify-between px-2 transition-colors", headerSolid ? "blurbar border-b border-line/70" : "bg-bg")} style={{ paddingTop: "var(--sat)" }}>
+        <button onClick={nav.pop} className="press m-1 grid h-9 w-9 place-items-center rounded-full">
+          <Icon name="back" size={24} stroke={2.4} className="text-accent" />
         </button>
         <span className={cx("truncate px-2 text-[17px] font-semibold transition-opacity", headerSolid ? "opacity-100" : "opacity-0")}>{r.title}</span>
-        <div className={cx("m-1 flex rounded-full", !headerSolid && "bg-black/45 backdrop-blur")}>
+        <div className="m-1 flex rounded-full">
           <IconButton
             name="heart"
             label="Favorit"
@@ -99,18 +99,19 @@ export function RecipeDetail({ id }: { id: string }) {
       </div>
 
       <div className="scroll h-full" onScroll={(e) => setScrollY(e.currentTarget.scrollTop)}>
-        <div className="relative">
-          <RecipeImage src={r.photos[0]} title={r.title} className="h-[340px] w-full" rounded="" />
-          <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/30 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-2">
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {r.tags.map((t) => (
-                <span key={t} className="rounded-full bg-white/12 px-2.5 py-0.5 text-[12px] font-medium backdrop-blur">
-                  {t}
-                </span>
-              ))}
-            </div>
-            <h1 className="text-[30px] font-bold leading-tight tracking-tight">{r.title}</h1>
+        <div className="flex items-center gap-3 px-4 pb-1" style={{ paddingTop: "calc(var(--sat) + 52px)" }}>
+          <RecipeImage src={r.photos[0]} title={r.title} className="h-16 w-16 shrink-0" rounded="rounded-[14px]" />
+          <div className="min-w-0">
+            <h1 className="text-[24px] font-bold leading-tight tracking-tight">{r.title}</h1>
+            {r.tags.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {r.tags.map((t) => (
+                  <span key={t} className="rounded-full bg-card2 px-2.5 py-0.5 text-[12px] font-medium text-muted">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
