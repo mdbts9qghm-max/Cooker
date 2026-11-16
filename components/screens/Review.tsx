@@ -19,8 +19,12 @@ const TAG_SUGGESTIONS = ["Frühstück", "Mittag", "Abend", "High Protein", "Meal
 
 const SOURCE_LABEL: Record<string, string> = { base: "Basis", custom: "Eigen", off: "OFF", none: "–" };
 
+const WEIGHT_UNITS = ["g", "ml"];
+
 function recalc(ing: Ingredient, overrides: Record<string, number>): Ingredient {
-  const { grams } = gramsFor(ing.amount, ing.unit, ing.food, overrides);
+  // ohne Menge die von Hand eingetragenen Gramm behalten (nicht auf 0 zurücksetzen)
+  if (ing.amount == null) return { ...ing };
+  const { grams } = gramsFor(ing.amount, ing.unit ?? "g", ing.food, overrides);
   return { ...ing, grams: Math.round(grams * 10) / 10, pieces: ing.unit === "Stück" && ing.amount != null ? ing.amount : undefined };
 }
 
@@ -480,7 +484,10 @@ function IngredientEditor({
   onUnitOverride: (key: string, grams: number) => void;
 }) {
   const nav = useNav();
-  const [cur, setCur] = useState<Ingredient>(ing);
+  // keine Einheit = Gramm (so wird es auch angezeigt)
+  const [cur, setCur] = useState<Ingredient>(() =>
+    ing.unit ? ing : { ...ing, unit: "g", amount: ing.amount ?? (ing.grams > 0 ? ing.grams : null) },
+  );
   const [mapped, setMapped] = useState<FoodRef | undefined>();
   const [ov, setOv] = useState(overrides);
   const isWeight = !cur.unit || ["g", "kg", "ml", "l", "oz", "lb", "cl", "dl", "mg"].includes(cur.unit);
@@ -530,7 +537,12 @@ function IngredientEditor({
       </div>
       <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] bg-card px-4 py-2.5">
         <span className="text-[15px] text-muted">Entspricht</span>
-        <NumberField className="w-32" value={cur.grams} onChange={(v) => apply({ ...cur, grams: v })} suffix="g" />
+        <NumberField
+          className="w-32"
+          value={cur.grams}
+          onChange={(v) => apply({ ...cur, grams: v, ...(WEIGHT_UNITS.includes(cur.unit ?? "g") ? { amount: v } : {}) })}
+          suffix="g"
+        />
       </div>
       {!isWeight && ovKey && cur.amount ? (
         <button
