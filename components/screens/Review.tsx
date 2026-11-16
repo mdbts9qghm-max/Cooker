@@ -14,6 +14,7 @@ import { parseIngredientLine, parseRecipeText } from "@/lib/parser";
 import type { FoodRef, Ingredient, Macros, Recipe } from "@/lib/types";
 import { UNITS_FOR_UI, fmtAmount } from "@/lib/units";
 import { compressImage, similarity } from "@/lib/util";
+import type { AmountMatch, FoundAmount } from "@/lib/amounts";
 
 const TAG_SUGGESTIONS = ["Frühstück", "Mittag", "Abend", "High Protein", "Meal Prep", "Schnell", "Vegetarisch"];
 
@@ -39,6 +40,8 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
   const [quick, setQuick] = useState("");
   const [newTag, setNewTag] = useState("");
   const [extra, setExtra] = useState("");
+  const [amountsBusy, setAmountsBusy] = useState<string | null>(null);
+  const amountsRef = useRef<HTMLInputElement>(null);
   const quickRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
 
@@ -99,6 +102,49 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
     }
     setExtra("");
     nav.toast(`${ings.length} Zutaten erkannt`);
+  };
+
+  const readAmounts = async (files: File[]) => {
+    setAmountsBusy("Mengen werden gelesen …");
+    try {
+      const [{ ocrColumns }, { parseAmountList, matchAmounts }] = await Promise.all([import("@/lib/importer"), import("@/lib/amounts")]);
+      const text = await ocrColumns(files, (i, total, p) => setAmountsBusy(`${total > 1 ? `Bild ${i + 1} von ${total}: ` : ""}Mengen werden gelesen … ${Math.round(p * 100)} %`));
+      const found = parseAmountList(text);
+      if (!found.length) {
+        nav.toast("Keine Mengen erkannt – ist die Zutatenliste mit Gramm zu sehen?");
+        return;
+      }
+      const { matches, unmatched } = matchAmounts(r.ingredients, found);
+      nav.openSheet(
+        (close) => (
+          <AmountsSheet
+            matches={matches}
+            unmatched={unmatched}
+            ingredients={r.ingredients}
+            close={close}
+            onApply={(chosen) => {
+              setR((x) =>
+                x
+                  ? {
+                      ...x,
+                      ingredients: x.ingredients.map((i) => {
+                        const g = chosen.get(i.id);
+                        return g == null ? i : { ...i, grams: g, amount: g, unit: "g", pieces: undefined, uncertain: false };
+                      }),
+                    }
+                  : x,
+              );
+              nav.toast(`${chosen.size} Mengen übernommen`);
+            }}
+          />
+        ),
+        { full: true },
+      );
+    } catch {
+      nav.toast("Texterkennung fehlgeschlagen – beim ersten Mal ist Internet nötig");
+    } finally {
+      setAmountsBusy(null);
+    }
   };
 
   const learnMapping = async (ing: Ingredient, food: FoodRef) => {
@@ -353,8 +399,32 @@ export function ReviewScreen({ draftId }: { draftId: string }) {
       {/* Zutaten */}
       <div className="mb-2 mt-6 flex items-end justify-between px-1">
         <h3 className="label">Zutaten ({r.ingredients.length})</h3>
-        <span className="text-[12px] text-muted">Tippen zum Ändern</span>
+        {r.ingredients.length > 0 ? (
+          <button onClick={() => amountsRef.current?.click()} className="press flex items-center gap-1 text-[13px] font-semibold text-accent">
+            <Icon name="camera" size={16} /> Mengen aus Screenshot
+          </button>
+        ) : (
+          <span className="text-[12px] text-muted">Tippen zum Ändern</span>
+        )}
       </div>
+      <input
+        ref={amountsRef}
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          e.target.value = "";
+          if (files.length) readAmounts(files);
+        }}
+      />
+      {amountsBusy && (
+        <div className="mb-2 flex items-center gap-3 rounded-[14px] bg-card p-3 text-[14px]">
+          <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          {amountsBusy}
+        </div>
+      )}
       <div className="divide-y divide-line overflow-hidden rounded-[16px] bg-card">
         {r.ingredients.map((ing) => (
           <div key={ing.id} className={cx("relative", ing.uncertain && "bg-accent/[0.06]")}>
@@ -601,6 +671,83 @@ function IngredientEditor({
       >
         Zutat entfernen
       </Button>
+    </div>
+  );
+}
+
+function AmountsSheet({
+  matches,
+  unmatched,
+  ingredients,
+  close,
+  onApply,
+}: {
+  matches: AmountMatch[];
+  unmatched: FoundAmount[];
+  ingredients: Ingredient[];
+  close: () => void;
+  onApply: (chosen: Map<string, number>) => void;
+}) {
+  const [on, setOn] = useState<Set<string>>(() => new Set(matches.map((m) => m.ingredientId)));
+  const matchedIds = new Set(matches.map((m) => m.ingredientId));
+  const missing = ingredients.filter((i) => !matchedIds.has(i.id));
+  return (
+    <div>
+      <SheetHeader
+        title="Mengen prüfen"
+        onClose={close}
+        right={
+          <button
+            disabled={!on.size}
+            onClick={() => {
+              onApply(new Map(matches.filter((m) => on.has(m.ingredientId)).map((m) => [m.ingredientId, m.found.grams])));
+              close();
+            }}
+            className="press text-[17px] font-semibold text-accent disabled:opacity-40"
+          >
+            Übernehmen
+          </button>
+        }
+      />
+      <p className="px-4 pb-3 text-[14px] leading-snug text-muted">{matches.length} Mengen erkannt. Bitte prüfen – abgewählte Zeilen bleiben unverändert.</p>
+      <div className="divide-y divide-line">
+        {matches.map((m) => {
+          const ing = ingredients.find((i) => i.id === m.ingredientId)!;
+          const sel = on.has(m.ingredientId);
+          return (
+            <button
+              key={m.ingredientId}
+              onClick={() =>
+                setOn((s) => {
+                  const n = new Set(s);
+                  if (n.has(m.ingredientId)) n.delete(m.ingredientId);
+                  else n.add(m.ingredientId);
+                  return n;
+                })
+              }
+              className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5"
+            >
+              <span className={cx("grid h-6 w-6 shrink-0 place-items-center rounded-full border-2", sel ? "border-accent bg-accent text-black" : "border-white/30")}>
+                {sel && <Icon name="check" size={14} stroke={3.2} />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px]">{m.ingredientName}</span>
+                {m.score < 0.8 && <span className="block truncate text-[12px] text-accent">erkannt als „{m.found.name}“ – bitte prüfen</span>}
+              </span>
+              <span className="tnum shrink-0 text-[15px] font-semibold">
+                {ing.grams > 0 && ing.grams !== m.found.grams && <span className="mr-1.5 text-[13px] font-normal text-faint line-through">{Math.round(ing.grams)} g</span>}
+                {m.found.grams.toLocaleString("de-DE")} g
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {(missing.length > 0 || unmatched.length > 0) && (
+        <div className="space-y-2 px-4 pt-4 text-[13px] leading-snug text-muted">
+          {missing.length > 0 && <p>Ohne Treffer, bleiben wie sie sind: {missing.map((i) => i.name).join(", ")}.</p>}
+          {unmatched.length > 0 && <p>Im Screenshot, aber keiner Zutat zugeordnet: {unmatched.map((u) => `${u.name} (${u.grams} g)`).join(", ")}.</p>}
+        </div>
+      )}
     </div>
   );
 }

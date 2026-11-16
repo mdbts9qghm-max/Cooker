@@ -213,6 +213,45 @@ export function cleanOcrText(text: string): string {
  * OCR im Browser (Tesseract.js, Deutsch + Englisch) für ein oder mehrere Bilder.
  * Lädt beim ersten Mal die Sprachdaten (ca. 10 MB), danach aus dem Cache.
  */
+async function makeWorker(onProgress: (p: number) => void) {
+  const { createWorker } = await import("tesseract.js");
+  return createWorker(["deu", "eng"], 1, {
+    workerPath: "/tesseract/worker.min.js",
+    corePath: "/tesseract/",
+    langPath: "/tesseract/lang",
+    logger: (m: { status: string; progress: number }) => {
+      if (m.status === "recognizing text") onProgress(m.progress);
+    },
+  });
+}
+
+/**
+ * OCR für zweispaltige Listen (z. B. MacroFactor-Zutaten): linke und rechte Bildhälfte
+ * getrennt lesen, damit sich die Spalten nicht vermischen. Gibt den Rohtext zurück.
+ */
+export async function ocrColumns(files: Blob[], onProgress?: (index: number, total: number, p: number) => void): Promise<string> {
+  let current = 0;
+  const steps = files.length * 2;
+  const worker = await makeWorker((p) => onProgress?.(Math.floor(current / 2), files.length, ((current % 2) + p) / 2));
+  try {
+    const parts: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const img = await prepareForOcr(files[i]);
+      const bmp = await createImageBitmap(img);
+      const half = Math.floor(bmp.width / 2);
+      for (let c = 0; c < 2; c++) {
+        current = i * 2 + c;
+        const { data } = await worker.recognize(img, { rectangle: { left: c * half, top: 0, width: c ? bmp.width - half : half, height: bmp.height } });
+        parts.push(data.text);
+      }
+    }
+    void steps;
+    return parts.join("\n");
+  } finally {
+    await worker.terminate();
+  }
+}
+
 export async function ocrImages(files: Blob[], onProgress?: (index: number, total: number, p: number) => void): Promise<string> {
   const { createWorker } = await import("tesseract.js");
   let current = 0;

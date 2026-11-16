@@ -180,7 +180,7 @@ export function RecipeDetail({ id }: { id: string }) {
               <Icon name="info" size={18} className="mt-0.5 shrink-0 text-accent" />
               <span className="flex-1">
                 {missing} {missing === 1 ? "Menge fehlt" : "Mengen fehlen"}: Der MacroFactor-Export enthält bei diesen Zutaten nur die Einheit, nicht die Gramm. Die Makros stimmen trotzdem.{" "}
-                <b className="text-accent">Mengen ergänzen</b>
+                <b className="text-accent">Mengen ergänzen – auch per Screenshot aus MacroFactor</b>
               </span>
             </button>
           )}
