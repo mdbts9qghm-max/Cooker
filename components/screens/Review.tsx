@@ -22,9 +22,13 @@ const SOURCE_LABEL: Record<string, string> = { base: "Basis", custom: "Eigen", o
 
 const WEIGHT_UNITS = ["g", "ml"];
 
-function recalc(ing: Ingredient, overrides: Record<string, number>): Ingredient {
+function recalc(ing: Ingredient, overrides: Record<string, number>, prev?: Ingredient): Ingredient {
   // ohne Menge die von Hand eingetragenen Gramm behalten (nicht auf 0 zurücksetzen)
   if (ing.amount == null) return { ...ing };
+  // fremde Einheiten (z. B. "packet" aus MacroFactor): Gramm im gleichen Verhältnis anpassen
+  if (prev && ing.unit && ing.unit === prev.unit && !UNITS_FOR_UI.includes(ing.unit) && prev.amount && prev.grams > 0) {
+    return { ...ing, grams: Math.round((prev.grams / prev.amount) * ing.amount * 10) / 10 };
+  }
   const { grams } = gramsFor(ing.amount, ing.unit ?? "g", ing.food, overrides);
   return { ...ing, grams: Math.round(grams * 10) / 10, pieces: ing.unit === "Stück" && ing.amount != null ? ing.amount : undefined };
 }
@@ -591,7 +595,7 @@ function IngredientEditor({
         <NumberField
           className="w-28"
           value={cur.amount}
-          onChange={(v) => apply(recalc({ ...cur, amount: v }, ov))}
+          onChange={(v) => apply(recalc({ ...cur, amount: v }, ov, cur))}
         />
         <select
           value={cur.unit ?? "g"}

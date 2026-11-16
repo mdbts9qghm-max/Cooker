@@ -193,7 +193,7 @@ export function RecipeDetail({ id }: { id: string }) {
                     {showUnit ? `${fmtAmount(i.amount! * factor)} ${i.unit === "Stück" ? "Stk." : i.unit}` : i.grams > 0 ? `${Math.round(i.grams * factor)} ${i.unit === "ml" ? "ml" : "g"}` : r.origin === "macrofactor" ? <span className="text-[13px] font-semibold text-accent">Menge fehlt</span> : <span className="text-[13px] font-normal text-muted">nach Bedarf</span>}
                   </span>
                   <span className="min-w-0 flex-1 text-[15px]">{i.name}</span>
-                  {showUnit && <span className="tnum shrink-0 text-[13px] text-muted">{Math.round(i.grams * factor)} g</span>}
+                  {showUnit && <span className="tnum shrink-0 text-[13px] text-muted">{i.grams * factor > 0 && i.grams * factor < 1 ? "<1" : Math.round(i.grams * factor)} g</span>}
                 </div>
               );
             })}

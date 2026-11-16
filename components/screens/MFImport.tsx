@@ -40,13 +40,23 @@ export function MFImportSheet({ previews, existing, close }: { previews: MFPrevi
   const add = async () => {
     setBusy(true);
     const now = Date.now();
-    const recs = items.filter((i) => selected.has(i.p.recipe.id)).map((i, k) => ({ ...i.p.recipe, createdAt: now - k }));
-    await db.recipes.bulkAdd(recs);
+    const chosen = items.filter((i) => selected.has(i.p.recipe.id));
+    // angehakte Duplikate ersetzen das vorhandene Rezept (gleiche id -> Plan, Favorit bleiben)
+    const replaced = chosen.filter((i) => i.dupe).map((i) => i.dupe!);
+    const recs = chosen.map((i, k) =>
+      i.dupe ? { ...i.p.recipe, id: i.dupe.id, favorite: i.dupe.favorite, photos: i.dupe.photos.length ? i.dupe.photos : i.p.recipe.photos, createdAt: i.dupe.createdAt } : { ...i.p.recipe, createdAt: now - k },
+    );
+    await db.recipes.bulkPut(recs);
     close();
     nav.setTab("recipes");
-    nav.toast(`${recs.length} ${recs.length === 1 ? "Rezept" : "Rezepte"} aus MacroFactor hinzugefügt`, async () => {
-      await db.recipes.bulkDelete(recs.map((r) => r.id));
-    });
+    const added = recs.length - replaced.length;
+    nav.toast(
+      `${added ? `${added} hinzugefügt` : ""}${added && replaced.length ? ", " : ""}${replaced.length ? `${replaced.length} ersetzt` : ""}`,
+      async () => {
+        await db.recipes.bulkDelete(recs.filter((r) => !replaced.some((d) => d.id === r.id)).map((r) => r.id));
+        await db.recipes.bulkPut(replaced);
+      },
+    );
   };
 
   return (
@@ -61,7 +71,7 @@ export function MFImportSheet({ previews, existing, close }: { previews: MFPrevi
         }
       />
       <p className="px-4 pb-3 text-[14px] leading-snug text-muted">
-        {items.length} Rezepte gefunden. Makros pro Portion kommen genau aus MacroFactor. Wähle aus, was du übernehmen willst – bereits vorhandene Rezepte sind abgewählt.
+        {items.length} Rezepte gefunden. Makros pro Portion kommen genau aus MacroFactor. Wähle aus, was du übernehmen willst. Bereits vorhandene Rezepte sind abgewählt – anhaken ersetzt sie (Favorit und Wochenplan bleiben).
       </p>
       <div className="divide-y divide-line">
         {items.map(({ p, dupe }) => {
@@ -85,7 +95,9 @@ export function MFImportSheet({ previews, existing, close }: { previews: MFPrevi
                   · {r.ingredients.length} Zutaten
                 </span>
                 <span className="mt-0.5 flex flex-wrap gap-1.5">
-                  {dupe && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">schon vorhanden</span>}
+                  {dupe && (
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">{on ? "ersetzt vorhandenes" : "schon vorhanden"}</span>
+                  )}
                   {p.missingAmounts > 0 && (
                     <span className="rounded-full bg-card2 px-2 py-0.5 text-[11px] font-semibold text-muted">
                       {p.missingAmounts} {p.missingAmounts === 1 ? "Menge fehlt" : "Mengen fehlen"}
@@ -104,10 +116,10 @@ export function MFImportSheet({ previews, existing, close }: { previews: MFPrevi
       </div>
       <div className="px-4 pt-4">
         <p className="mb-3 text-[12px] leading-snug text-muted">
-          Fehlende Mengen betreffen nur die Einkaufsliste – MacroFactor gibt bei manchen Zutaten nur die Einheit („1 packet“) statt der Menge heraus. Du kannst sie im Rezept unter Bearbeiten ergänzen.
+          Mengen werden so übernommen, wie sie im MacroFactor-Export stehen (z. B. „1 packet“, „1 oz“) und in Gramm umgerechnet. Die Makros kommen genau aus MacroFactor.
         </p>
         <Button className="w-full" disabled={!selected.size || busy} onClick={add} icon="plus">
-          {selected.size} {selected.size === 1 ? "Rezept" : "Rezepte"} hinzufügen
+          {selected.size} {selected.size === 1 ? "Rezept" : "Rezepte"} übernehmen
         </Button>
       </div>
     </div>

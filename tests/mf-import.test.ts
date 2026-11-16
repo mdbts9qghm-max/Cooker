@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { strToU8, zipSync } from "fflate";
-import { readMacroFactorExport, mfToRecipe, splitFlatDescription, parseMFIngredient } from "@/lib/mf-import";
+import { readMacroFactorExport, mfToRecipe, splitFlatDescription, parseMFIngredient, mfUnitGrams } from "@/lib/mf-import";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const col = (i: number) => String.fromCharCode(65 + i);
@@ -77,14 +77,19 @@ describe("MacroFactor-Import", () => {
     expect(p.recipe.tags).toContain("Frühstück");
     expect(p.ingredientSource).toBe("macrofactor");
     const g = p.recipe.ingredients.map((i) => Math.round(i.grams));
-    expect(g).toEqual([360, 165, 30, 30, 0]); // 3 Bananen, 3 Eier, Gramm-Angaben, "1 tbsp" unbekannt
-    expect(p.missingAmounts).toBe(1);
+    expect(g).toEqual([360, 150, 30, 30, 6]); // 3 Bananen, 3 Eier, Gramm-Angaben, 1 tbsp Kakao
+    expect(p.recipe.ingredients[4]).toMatchObject({ amount: 1, unit: "tbsp" });
+    expect(p.missingAmounts).toBe(0);
   });
 
   it("Hilfsfunktionen", () => {
     expect(splitFlatDescription("Rezept ⬇️450g Magerquark300g Dinkelmehl")).toBe("Rezept\n450g Magerquark\n300g Dinkelmehl");
     expect(parseMFIngredient("Sticky Rice, Raw (200 g)")).toMatchObject({ amount: 200, unit: "g", state: "raw" });
-    expect(parseMFIngredient("Chicken Breast Boneless Skinless Raw (3 oz)")).toMatchObject({ amount: null });
+    expect(parseMFIngredient("Chicken Breast Boneless Skinless Raw (3 oz)")).toMatchObject({ amount: 3, unit: "oz" });
+    expect(parseMFIngredient('Dill Pickles (1 large - 4" long)')).toMatchObject({ amount: 1, unit: "large" });
+    expect(mfUnitGrams(1, "packet", { id: "ketchup" })).toBe(10);
+    expect(mfUnitGrams(1, "container - each 6 OZ", { id: "griechischer-joghurt-0" })).toBe(170.1);
+    expect(mfUnitGrams(2, "spray", null)).toBe(0.6);
     expect(() => readMacroFactorExport(makeXlsx([["Foo"], ["bar"]]))).toThrow(/Recipe Name|Recipes/);
   });
 });
