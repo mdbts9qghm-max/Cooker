@@ -38,6 +38,7 @@ export function RecipeDetail({ id }: { id: string }) {
   if (!r || !macros) return <div className="h-full bg-bg" />;
 
   const s = servings ?? r.servings;
+  const missing = r.ingredients.filter((i) => !i.grams && i.amount == null).length;
   const factor = s / Math.max(r.servings, 0.1);
   const shown = view === "serving" ? macros.perServing : view === "100g" ? macros.per100 ?? macros.perServing : scaleMacros(macros.perServing, s);
 
@@ -168,13 +169,28 @@ export function RecipeDetail({ id }: { id: string }) {
               <Stepper value={s} min={0.5} step={r.servings >= 4 ? 1 : 0.5} onChange={setServings} />
             </div>
           </div>
+          {r.origin === "macrofactor" && missing > 0 && (
+            <button
+              onClick={() => {
+                const d = draftFromRecipe(r);
+                nav.push({ name: "review", draftId: d.id });
+              }}
+              className="press mb-2 flex w-full items-start gap-3 rounded-[14px] bg-accent-soft p-3 text-left text-[13px] leading-snug"
+            >
+              <Icon name="info" size={18} className="mt-0.5 shrink-0 text-accent" />
+              <span className="flex-1">
+                {missing} {missing === 1 ? "Menge fehlt" : "Mengen fehlen"}: Der MacroFactor-Export enthält bei diesen Zutaten nur die Einheit, nicht die Gramm. Die Makros stimmen trotzdem.{" "}
+                <b className="text-accent">Mengen ergänzen</b>
+              </span>
+            </button>
+          )}
           <div className="divide-y divide-line overflow-hidden rounded-[16px] bg-card">
             {r.ingredients.map((i) => {
               const showUnit = i.amount != null && i.unit && i.unit !== "g" && i.unit !== "ml";
               return (
                 <div key={i.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="tnum w-[70px] shrink-0 text-[15px] font-semibold">
-                    {showUnit ? `${fmtAmount(i.amount! * factor)} ${i.unit === "Stück" ? "Stk." : i.unit}` : i.grams > 0 ? `${Math.round(i.grams * factor)} ${i.unit === "ml" ? "ml" : "g"}` : <span className="text-[13px] font-normal text-muted">nach Bedarf</span>}
+                  <span className="tnum w-[86px] shrink-0 whitespace-nowrap text-[15px] font-semibold">
+                    {showUnit ? `${fmtAmount(i.amount! * factor)} ${i.unit === "Stück" ? "Stk." : i.unit}` : i.grams > 0 ? `${Math.round(i.grams * factor)} ${i.unit === "ml" ? "ml" : "g"}` : r.origin === "macrofactor" ? <span className="text-[13px] font-semibold text-accent">Menge fehlt</span> : <span className="text-[13px] font-normal text-muted">nach Bedarf</span>}
                   </span>
                   <span className="min-w-0 flex-1 text-[15px]">{i.name}</span>
                   {showUnit && <span className="tnum shrink-0 text-[13px] text-muted">{Math.round(i.grams * factor)} g</span>}
