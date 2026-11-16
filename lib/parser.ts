@@ -106,7 +106,10 @@ export function parseMacros(text: string): { macros: Partial<Macros>; scope: "se
   return { macros, scope };
 }
 
+const SINGLE_MACRO_LINE = /^\s*[-–•*]?\s*(?:ca\.?\s*)?\d+(?:[.,]\d+)?\s*(?:g|gr|kcal)?\s*(?:fett|fat|fats|kh|kohlenhydrate|carbs?|carbohydrates|eiweiß|eiweiss|protein|ballaststoffe|fiber|fibre|kcal|kalorien|calories|cals?)\s*$/i;
+
 function looksLikeMacroLine(line: string): boolean {
+  if (SINGLE_MACRO_LINE.test(cleanLine(line))) return true;
   const { macros } = parseMacros(line);
   const n = Object.keys(macros).length;
   if (n >= 2) return true;
@@ -169,6 +172,7 @@ export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
   const raw = line;
   const gramsHintM = line.match(PAREN_G_RE);
   let gramsHint = gramsHintM ? num(gramsHintM[1]) : null;
+  const perPieceM = line.match(/(?:^|\s)(?:à|a|je|each|zu je)\s*(\d+(?:[.,]\d+)?)\s*(g|ml)\b/i);
   if (gramsHint != null && /^oz|^ounce/i.test(gramsHintM![2])) gramsHint = Math.round(gramsHint * 28.35);
   const stateM = STATE_COOKED_RE.test(line) ? "cooked" : STATE_RAW_RE.test(line) ? "raw" : null;
 
@@ -213,9 +217,15 @@ export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
 
   // "2 Knoblauchzehen" -> unit Zehe
   if (unit == null && /zehen?\b/i.test(name) && /knoblauch/i.test(name)) unit = "Zehe";
+  // "120 Käse light": große Zahl ohne Einheit sind Gramm, keine 120 Stück
+  if (unit == null && amount != null && amount >= 20) {
+    unit = "g";
+    uncertain = true;
+  }
   if (unit == null && amount != null) unit = "Stück";
 
-  name = cleanIngredientName(name);
+  if (perPieceM && amount != null && gramsHint == null) gramsHint = Math.round(amount * num(perPieceM[1])!);
+  name = cleanIngredientName(name.replace(/\s+(?:à|je|each)\s*\d+(?:[.,]\d+)?\s*(?:g|ml)\b.*$/i, ""));
   if (!name || !/\p{L}{2,}/u.test(name)) return null;
   // "Salz und Pfeffer" etc. — fine as no-quantity ingredient
   if (amount == null && gramsHint == null) uncertain = true;
@@ -262,8 +272,27 @@ const WORD_NUM: Record<string, string> = {
 };
 
 /** Split "200g Quark, 1 Banane, 30g Haferflocken" into separate lines */
+/** split at , ; + | — but never inside parentheses ("Frischkäse (0,2 % Fett)") */
+function splitOutsideParens(text: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "(") depth++;
+    if (ch === ")") depth = Math.max(0, depth - 1);
+    const sep = depth === 0 && (ch === "," || ch === ";" || ((ch === "+" || ch === "|") && text[i - 1] === " " && text[i + 1] === " "));
+    if (sep && !(ch === "," && /\d/.test(text[i - 1] ?? "") && /\d/.test(text[i + 1] ?? ""))) {
+      parts.push(cur.trim());
+      cur = "";
+    } else cur += ch;
+  }
+  parts.push(cur.trim());
+  return parts.filter(Boolean);
+}
+
 function splitInlineList(text: string): string[] {
-  const parts = text.split(/\s*(?:,|;|\s\+\s|\s\|\s)\s*/).filter(Boolean);
+  const parts = splitOutsideParens(text);
   if (parts.length >= 2 && parts.filter((p) => looksLikeIngredient(p)).length >= 2) return parts;
   return [text];
 }

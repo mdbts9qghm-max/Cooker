@@ -145,7 +145,7 @@ export function RecipeDetail({ id }: { id: string }) {
               </div>
             </div>
             <p className="mt-3 text-[12px] text-muted">
-              {macros.source === "creator" ? "Makros vom Creator" : "Berechnet aus den Zutaten"} · {Math.round(macros.perServing.protein / Math.max(macros.perServing.kcal, 1) * 1000) / 10} g Protein pro 100 kcal
+              {macros.source === "creator" ? (r.origin === "macrofactor" ? "Makros aus MacroFactor" : "Makros vom Creator") : "Berechnet aus den Zutaten"} · {Math.round(macros.perServing.protein / Math.max(macros.perServing.kcal, 1) * 1000) / 10} g Protein pro 100 kcal
             </p>
           </div>
 

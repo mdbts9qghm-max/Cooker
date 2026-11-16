@@ -54,13 +54,14 @@ const UNIT_ALIASES: Record<string, string[]> = {
   Scheibe: ["scheibe", "scheiben", "slice", "slices"],
   Dose: ["dose", "dosen", "can", "cans", "tin", "tins", "glas"],
   oz: ["oz", "ounce", "ounces"],
-  lb: ["lb", "lbs", "pound", "pounds"],
+  lb: ["lb", "lbs", "ibs", "pound", "pounds"],
   Bund: ["bund", "bunch", "bündel"],
   Handvoll: ["handvoll", "handful", "handfuls", "hand voll"],
   Packung: ["packung", "packungen", "pck", "pck.", "pkg", "päckchen", "pack", "package", "packet", "beutel"],
   Zehe: ["zehe", "zehen", "clove", "cloves"],
   Spritzer: ["spritzer", "schuss", "dash", "splash"],
   Messlöffel: ["scoop", "scoops", "messlöffel"],
+  Sprühstoß: ["sprüher", "sprühstoß", "sprühstöße", "spray", "sprays", "sprühstoss", "pumpstoß"],
 };
 
 const ALIAS_TO_UNIT = new Map<string, string>();
@@ -87,7 +88,7 @@ export const UNITS_FOR_UI = ["g", "ml", "Stück", "EL", "TL", "Tasse", "Prise", 
 export function toGrams(
   amount: number,
   unit: string | null,
-  opts: { pieceG?: number; elG?: number; cupG?: number; override?: number; foodId?: string } = {},
+  opts: { pieceG?: number; elG?: number; cupG?: number; override?: number; foodId?: string; spice?: boolean } = {},
 ): { grams: number; guess: boolean } {
   if (opts.override && unit && !["g", "kg", "mg", "ml", "l", "cl", "dl", "oz", "lb"].includes(unit)) {
     return { grams: amount * opts.override, guess: false };
@@ -117,7 +118,8 @@ export function toGrams(
     }
     case "Bund": return { grams: amount * 30, guess: true };
     case "Handvoll": return { grams: amount * 30, guess: true };
-    case "Packung": return { grams: amount * 200, guess: true };
+    case "Packung": return { grams: amount * (opts.spice ? 30 : 200), guess: true };
+    case "Sprühstoß": return { grams: amount * 0.3, guess: false };
     case "Messlöffel": return { grams: amount * 30, guess: true };
     case "Stück":
     case null:

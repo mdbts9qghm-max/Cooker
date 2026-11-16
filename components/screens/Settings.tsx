@@ -6,9 +6,10 @@ import { Icon } from "../icons";
 import { Screen, SwipeRow, useNav } from "../nav";
 import { Button, EmptyState, Group, ListRow, NumberField, Toggle, cx } from "../ui";
 import { CustomFoodForm } from "./FoodPicker";
+import { MFImportSheet } from "./MFImport";
 import { db, updateSettings } from "@/lib/db";
 import { restoreBackup, shareBackup } from "@/lib/backup";
-import { useRecipes, useSettings } from "@/lib/hooks";
+import { loadMatchContext, useRecipes, useSettings } from "@/lib/hooks";
 import { addSampleData, removeSampleData } from "@/lib/samples";
 import type { Goals } from "@/lib/types";
 import { WD_LONG } from "@/lib/util";
@@ -18,6 +19,7 @@ export function SettingsScreen() {
   const s = useSettings();
   const recipes = useRecipes() ?? [];
   const fileRef = useRef<HTMLInputElement>(null);
+  const mfRef = useRef<HTMLInputElement>(null);
   const hasSamples = recipes.some((r) => r.sample);
   const foods = useLiveQuery(() => db.foods.count(), []) ?? 0;
 
@@ -35,6 +37,39 @@ export function SettingsScreen() {
         <ListRow icon="barcode" title="Eigene Lebensmittel" subtitle={`${foods} angelegt`} onClick={() => nav.push({ name: "foods" })} />
       </Group>
 
+
+      <h3 className="label mb-2 mt-6 px-1">Import</h3>
+      <Group>
+        <ListRow
+          icon="restore"
+          title="Aus MacroFactor importieren"
+          subtitle="Excel-Datei aus dem MacroFactor-Datenexport wählen"
+          onClick={() => mfRef.current?.click()}
+        />
+      </Group>
+      <p className="mt-2 px-1 text-[13px] leading-relaxed text-muted">
+        In MacroFactor: Mehr → Datenverwaltung → Daten exportieren, Datei in „Dateien“ sichern. Hier auswählen, dann bestätigst du, welche Rezepte übernommen werden. Es wird nichts gelöscht.
+      </p>
+      <input
+        ref={mfRef}
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        hidden
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (!f) return;
+          try {
+            const [{ readMacroFactorExport, mfToRecipe }, ctx, existing] = await Promise.all([import("@/lib/mf-import"), loadMatchContext(), db.recipes.toArray()]);
+            const list = readMacroFactorExport(new Uint8Array(await f.arrayBuffer()));
+            if (!list.length) return nav.toast("Keine Rezepte in der Datei gefunden");
+            const previews = list.map((m) => mfToRecipe(m, ctx));
+            nav.openSheet((close) => <MFImportSheet previews={previews} existing={existing} close={close} />, { full: true });
+          } catch (err) {
+            nav.toast((err as Error).message || "Datei konnte nicht gelesen werden");
+          }
+        }}
+      />
 
       <h3 className="label mb-2 mt-6 px-1">Backup</h3>
       <Group>

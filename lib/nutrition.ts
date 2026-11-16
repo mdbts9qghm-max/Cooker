@@ -13,6 +13,8 @@ export function foldUmlauts(s: string): string {
 export function normKey(name: string): string {
   return name
     .toLowerCase()
+    .replace(/\b(non|low|reduced|fat)-(fat|free|sodium)\b/g, "$1 $2")
+    .replace(/\bnon fat\b/g, "nonfat")
     .replace(/[()[\]{}.,;:!?"'„“”%]/g, " ")
     .replace(/\b(gekocht(?:e[rsn]?)?|gegart(?:e[rsn]?)?|cooked|roh(?:e[rsn]?)?|ungekocht(?:e[rsn]?)?|uncooked|raw|dry|trocken(?:e[rsn]?)?|frisch(?:e[rsn]?)?|fresh|große?n?|kleine?n?|mittelgroße?n?|large|small|medium|bio|organic|tk|frozen|gehackt(?:e[rsn]?)?|gewürfelt(?:e[rsn]?)?|chopped|diced|minced|sliced|grated|gerieben(?:e[rsn]?)?|fein(?:e[rsn]?)?|reife?n?)\b/g, " ")
     .replace(/\s+/g, " ")
@@ -145,6 +147,7 @@ export function gramsFor(
     pieceG: food?.pieceG ?? base?.pieceG,
     elG: base?.elG,
     cupG: base ? CUP_G[base.id] ?? CUP_G[base.group] : undefined,
+    spice: base?.aisle === "Gewürze",
     override: ov,
     foodId: food?.id,
   });

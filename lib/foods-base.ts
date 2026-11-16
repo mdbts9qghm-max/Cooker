@@ -18,7 +18,7 @@ putenbrust-r;Putenbrust, roh;putenbrust|pute|truthahn|turkey breast|putenfilet;1
 putenbrust-c;Putenbrust, gebraten;cooked turkey breast;147;30;0;2.1;0;F;;;c
 hackfleisch-rind-r;Rinderhackfleisch, roh;80/20 ground beef|85/15 ground beef|rinderhack|rinderhackfleisch|hackfleisch|hack|ground beef|minced beef|beef mince;254;17.2;0;20;0;F;;;r
 hackfleisch-rind-c;Rinderhackfleisch, gebraten;cooked ground beef;288;24;0;20.7;0;F;;;c
-hackfleisch-mager-r;Rinderhack mager (5 %), roh;lean ground beef|extra lean ground beef|93/7 ground beef|96/4 ground beef|mageres rinderhack|tatar|lean ground beef|beefsteakhack;137;21.4;0;5;0;F;;;r
+hackfleisch-mager-r;Rinderhack mager (5 %), roh;beef ground|ground beef 90%|beef ground 90% lean|beef ground 90% lean 10% fat|fettreduziertes rinderhackfleisch|fettreduziertes rinder-hackfleisch|fettreduziertes hack|fettreduziertes hackfleisch|mageres rinderhackfleisch|mageres hackfleisch|mageres hack|lean ground beef|extra lean ground beef|93/7 ground beef|96/4 ground beef|mageres rinderhack|tatar|lean ground beef|beefsteakhack;137;21.4;0;5;0;F;;;r
 hackfleisch-gemischt-r;Hackfleisch gemischt, roh;gemischtes hack|hackfleisch gemischt|halb und halb;262;17;0;21.5;0;F;;;r
 putenhack-r;Putenhackfleisch, roh;lean ground turkey|99% lean ground turkey|93/7 ground turkey|putenhack|ground turkey;148;17.5;0;8.3;0;F;;;r
 rindersteak-r;Rindersteak, roh;steak|rumpsteak|rinderhüfte|beef steak|sirloin|rindfleisch|beef;158;21;0;8;0;F;;;r
@@ -42,12 +42,12 @@ eigelb;Eigelb;eigelb|egg yolk;322;15.9;3.6;26.5;0;K;17;;
 magerquark;Magerquark;magerquark|quark|low fat quark;67;12;4;0.3;0;K;;;
 skyr;Skyr;skyr;63;11;4;0.2;0;K;;;
 griechischer-joghurt;Griechischer Joghurt 10 %;plain greek yogurt|full fat greek yogurt|griechischer joghurt|greek yogurt|griechischer jogurt;133;5;4;10;0;K;;;
-griechischer-joghurt-0;Griechischer Joghurt 0 %;nonfat greek yogurt|non fat greek yogurt|fat free greek yogurt|0% greek yogurt|plain nonfat greek yogurt|greek yogurt 0%|nonfat greek yogurt|griechischer joghurt 0;59;10.2;3.6;0.4;0;K;;;
-joghurt;Naturjoghurt 3,5 %;joghurt|naturjoghurt|jogurt|yogurt|yoghurt|plain yogurt;61;3.5;4.7;3.3;0;K;;;
-joghurt-mager;Joghurt 0,1 %;magerjoghurt|fettarmer joghurt|low fat yogurt;38;4.3;4.2;0.1;0;K;;;
+griechischer-joghurt-0;Griechischer Joghurt 0 %;greek yogurt plain nonfat|greek yogurt nonfat|nonfat greek yogurt|non fat greek yogurt|fat free greek yogurt|0% greek yogurt|plain nonfat greek yogurt|greek yogurt 0%|nonfat greek yogurt|griechischer joghurt 0;59;10.2;3.6;0.4;0;K;;;
+joghurt;Naturjoghurt 3,5 %;yogurt plain|whole milk yogurt|joghurt|naturjoghurt|jogurt|yogurt|yoghurt|plain yogurt;61;3.5;4.7;3.3;0;K;;;
+joghurt-mager;Joghurt 0,1 %;plain yogurt 0.1|yogurt 0.1|plain yogurt 0 1 fat|magerjoghurt|fettarmer joghurt|low fat yogurt;38;4.3;4.2;0.1;0;K;;;
 huettenkaese;Hüttenkäse;low fat cottage cheese|fat free cottage cheese|hüttenkäse|körniger frischkäse|cottage cheese;98;11.1;3.4;4.3;0;K;;;
 frischkaese;Frischkäse;frischkäse|cream cheese|philadelphia;342;6;4.1;34;0;K;;;
-frischkaese-light;Frischkäse light;light cream cheese|reduced fat cream cheese|neufchatel|frischkäse light|light cream cheese;160;8;6;12;0;K;;;
+frischkaese-light;Frischkäse light;cream cheese light|cream cheese light or low fat|low fat cream cheese|frischkäse 0,2|magerstufe frischkäse|light cream cheese|reduced fat cream cheese|neufchatel|frischkäse light|light cream cheese;160;8;6;12;0;K;;;
 mozzarella;Mozzarella;mozzarella;254;18;2.5;19;0;K;125;;
 mozzarella-light;Mozzarella light;part skim mozzarella|low moisture mozzarella|fat free mozzarella|light mozzarella|mozzarella light;165;19;1.5;9;0;K;125;;
 parmesan;Parmesan;parmesan|parmigiano|grana padano|parmesan cheese;392;35.8;3.2;25.8;0;K;;6;
@@ -63,7 +63,7 @@ sahne;Schlagsahne 30 %;heavy whipping cream|double cream|sahne|schlagsahne|heavy
 kochsahne;Kochsahne 15 %;light cream|half and half|half & half|kochsahne|cooking cream;167;3;4;15;0;K;;15;
 saure-sahne;Saure Sahne / Schmand;saure sahne|schmand|sour cream|crème fraîche|creme fraiche;198;2.4;4.6;19;0;K;;15;
 butter;Butter;butter;717;0.9;0.1;81;0;K;;12;
-proteinpulver;Proteinpulver (Whey);vanilla protein powder|chocolate protein powder|protein|scoop of protein|casein|proteinpulver|whey|eiweißpulver|protein powder|whey protein|scoop protein;380;78;8;5;0;T;30;10;
+proteinpulver;Proteinpulver (Whey);whey protein powder|vanilla whey protein blend|whey protein schoko|schoko whey|protein powder vanilla|vanilla protein powder|chocolate protein powder|protein|scoop of protein|casein|proteinpulver|whey|eiweißpulver|protein powder|whey protein|scoop protein;380;78;8;5;0;T;30;10;
 tofu;Tofu natur;tofu|firm tofu;144;17.3;2.8;8.7;2.3;K;;;
 tempeh;Tempeh;tempeh;192;20.3;7.6;10.8;0;K;;;
 haferflocken;Haferflocken;haferflocken|haferflocke|oats|rolled oats|oatmeal|porridge oats;379;13.2;60;6.5;10.1;T;;8;
@@ -71,7 +71,7 @@ reis-r;Reis, ungekocht;reis|basmatireis|jasminreis|langkornreis|rice|basmati|jas
 reis-c;Reis, gekocht;gekochter reis|cooked rice;130;2.7;28.2;0.3;0.4;T;;15;c
 vollkornreis-r;Vollkornreis, ungekocht;vollkornreis|naturreis|brown rice;367;7.5;76;2.7;3.4;T;;12;r
 vollkornreis-c;Vollkornreis, gekocht;cooked brown rice;123;2.7;25.6;1;1.6;T;;15;c
-nudeln-r;Nudeln, ungekocht;nudeln|pasta|spaghetti|penne|fusilli|spirelli|tagliatelle|makkaroni|rigatoni|farfalle|linguine|noodles;371;13;75;1.5;3.2;T;;;r
+nudeln-r;Nudeln, ungekocht;macaroni|elbow macaroni|macaroni dry|nudeln|pasta|spaghetti|penne|fusilli|spirelli|tagliatelle|makkaroni|rigatoni|farfalle|linguine|noodles;371;13;75;1.5;3.2;T;;;r
 nudeln-c;Nudeln, gekocht;gekochte nudeln|cooked pasta;158;5.8;31;0.9;1.8;T;;;c
 vollkornnudeln-r;Vollkornnudeln, ungekocht;vollkornnudeln|vollkornspaghetti|whole wheat pasta;352;14.6;65;2.5;9;T;;;r
 vollkornnudeln-c;Vollkornnudeln, gekocht;cooked whole wheat pasta;149;6;30;1.7;3.9;T;;;c
@@ -111,7 +111,7 @@ kakao;Kakaopulver ungesüßt;kakao|kakaopulver|backkakao|cocoa|cocoa powder;228;
 backpulver;Backpulver;backpulver|baking powder|natron|baking soda;53;0;28;0;0.2;T;;10;
 hefe;Hefe;hefe|trockenhefe|yeast;325;40;41;7.6;27;K;;;
 olivenoel;Olivenöl;olivenöl|olive oil|öl|oil|olivenoel|evoo;884;0;0;100;0;T;;13;
-rapsoel;Rapsöl;avocado oil|avocadoöl|avocado öl|cooking spray|olive oil spray|rapsöl|pflanzenöl|sonnenblumenöl|vegetable oil|canola oil|sunflower oil;884;0;0;100;0;T;;13;
+rapsoel;Rapsöl;ölspray|oil spray|olive oil no-stick cooking spray|no-stick cooking spray|avocado oil|avocadoöl|avocado öl|cooking spray|olive oil spray|rapsöl|pflanzenöl|sonnenblumenöl|vegetable oil|canola oil|sunflower oil;884;0;0;100;0;T;;13;
 kokosoel;Kokosöl;kokosöl|coconut oil;892;0;0;99;0;T;;13;
 sesamoel;Sesamöl;sesamöl|sesame oil;884;0;0;100;0;T;;13;
 kokosmilch;Kokosmilch;kokosmilch|coconut milk;197;2;2.8;21;0;T;;15;
@@ -139,7 +139,7 @@ erbsen;Erbsen (TK);erbsen|peas|green peas|tk erbsen;81;5.4;14.5;0.4;5.1;K;;;
 mais;Mais (Dose);mais|corn|sweet corn|zuckermais;86;3.3;19;1.4;2;T;;;
 tomate;Tomate;tomate|tomaten|tomato|tomatoes|strauchtomaten;18;0.9;3.9;0.2;1.2;O;120;;
 cherrytomaten;Cherrytomaten;cherrytomaten|cocktailtomaten|cherry tomatoes|datteltomaten;18;0.9;3.9;0.2;1.2;O;15;;
-tomaten-dose;Gehackte Tomaten (Dose);crushed tomatoes|marinara|marinara sauce|pasta sauce|gehackte tomaten|stückige tomaten|tomaten dose|canned tomatoes|diced tomatoes|passierte tomaten|passata|tomatensauce|tomato sauce|pizzatomaten;32;1.6;5.8;0.3;1.9;T;;15;
+tomaten-dose;Gehackte Tomaten (Dose);tomatoes crushed canned|crushed tomatoes canned|tomatensoße|tomato sauce canned|crushed tomatoes|marinara|marinara sauce|pasta sauce|gehackte tomaten|stückige tomaten|tomaten dose|canned tomatoes|diced tomatoes|passierte tomaten|passata|tomatensauce|tomato sauce|pizzatomaten;32;1.6;5.8;0.3;1.9;T;;15;
 tomatenmark;Tomatenmark;tomatenmark|tomato paste;82;4.3;18.9;0.5;4.1;T;;16;
 gurke;Gurke;gurke|salatgurke|cucumber;15;0.7;3.6;0.1;0.5;O;400;;
 paprika;Paprika;paprika|paprikaschote|bell pepper|bell peppers|peppers|rote paprika|gelbe paprika;31;1;6;0.3;2.1;O;160;;
@@ -195,7 +195,7 @@ sriracha;Sriracha / Chilisauce;sriracha|chilisauce|hot sauce|chili sauce;93;1.9;
 ketchup;Ketchup;sugar free ketchup|zuckerfreier ketchup|ketchup;101;1;27;0.1;0.3;G;;17;
 senf;Senf;senf|mustard|dijon|dijonsenf;66;4.4;5.8;4;3.3;G;;15;
 mayonnaise;Mayonnaise;mayonnaise|mayo;680;1;0.6;75;0;K;;14;
-mayo-light;Salatcreme / Mayo light;light mayo|light mayonnaise|mayo light|light mayo|salatcreme;250;0.9;10;23;0;K;;15;
+mayo-light;Salatcreme / Mayo light;mayonnaise low fat|low fat mayonnaise|mayo light|light-mayonnaise|light mayo|light mayonnaise|mayo light|light mayo|salatcreme;250;0.9;10;23;0;K;;15;
 pesto;Pesto;pesto|basilikumpesto|pesto genovese;458;5;6;47;1.5;K;;15;
 essig;Essig;essig|balsamico|balsamessig|apfelessig|vinegar|balsamic|weißweinessig|reisessig;88;0.5;17;0;0;G;;15;
 bruehe;Gemüsebrühe (zubereitet);chicken broth|vegetable broth|beef broth|chicken stock|brühe|gemüsebrühe|hühnerbrühe|fond|broth|stock|bouillon;5;0.3;0.6;0.2;0;G;;15;
@@ -204,7 +204,7 @@ currypaste;Currypaste;currypaste|rote currypaste|curry paste|red curry paste;140
 salz;Salz;salz|salt|meersalz|sea salt;0;0;0;0;0;G;;18;
 pfeffer;Pfeffer;pfeffer|pepper|black pepper|schwarzer pfeffer;251;10.4;64;3.3;25.3;G;;6;
 paprikapulver;Paprikapulver;paprikapulver|paprika edelsüß|geräuchertes paprikapulver|smoked paprika|paprika powder;282;14.1;54;12.9;34.9;G;;7;
-curry;Currypulver;curry|currypulver|curry powder;325;14.3;56;14;53;G;;6;
+curry;Currypulver;garam masala|curry|currypulver|curry powder;325;14.3;56;14;53;G;;6;
 kreuzkuemmel;Kreuzkümmel;kreuzkümmel|cumin;375;17.8;44;22.3;10.5;G;;6;
 zimt;Zimt;zimt|cinnamon;247;4;81;1.2;53;G;;8;
 oregano;Oregano / Kräuter getrocknet;oregano|kräuter der provence|italienische kräuter|thymian|rosmarin|getrocknete kräuter|italian seasoning|dried herbs;265;9;69;4.3;42.5;G;;3;
@@ -214,6 +214,14 @@ kurkuma;Kurkuma;kurkuma|turmeric;312;9.7;67;3.3;22.7;G;;7;
 vanille;Vanilleextrakt;vanille|vanilleextrakt|vanillezucker|vanilla|vanilla extract;288;0.1;12.7;0.1;0;G;;13;
 kraeuter-frisch;Frische Kräuter;fresh herbs|petersilie|basilikum|koriander|schnittlauch|dill|minze|parsley|basil|cilantro|coriander|chives|mint|kräuter;36;3;6.3;0.8;3.3;O;;3;
 gyros-gewuerz;Gewürzmischung;cajun seasoning|fajita seasoning|everything bagel seasoning|bbq rub|gewürzmischung|taco gewürz|gyrosgewürz|taco seasoning|seasoning|gewürz;300;10;55;5;20;G;;7;
+reispapier;Reispapier, trocken;reispapier|rice paper|rice paper dry|rice paper sheets;333;0.6;83;0.6;1.6;T;9;;
+worcestershire;Worcestershiresauce;worcestershire|worcestershire sauce|worcestershiresauce|worcester sauce;78;0;19.5;0;0;G;;17;
+gochujang;Gochujang;gochujang|gochujang paste|gochujang sauce|korean chili paste;200;4;42;2;3;G;;20;
+biscoff-kekse;Karamellkekse (Biscoff);biscoff|lotus biscoff|lotus kekse|lotus biscoff kekse|biscoff biscuits|biscoff cookies|spekulatius;484;5;72;19;1.5;T;8;;
+biscoff-creme;Karamellkeks-Creme (Biscoff);biscoff spread|lotus biscoff creme|biscoff creme|lotus creme|spekulatiuscreme|cookie butter;584;3;57;38;1;T;;16;
+pommes;Pommes frites (Ofen);pommes|pommes frites|french fries|fries|fritten|french fries cooked from fresh;150;2.5;24;5;2.5;K;;;
+proteinpudding;Proteinpudding;protein pudding|proteinpudding|chocolate protein pudding|high protein pudding|eiweißpudding;75;10;6;1.2;0.5;K;200;;
+proteinmilch;Proteinmilch / Protein-Drink;high protein milk|proteinmilch|protein milch|protein drink|high protein drink;55;8;4.5;0.5;0;K;;15;
 wasser;Wasser;wasser|water|eiswürfel|ice;0;0;0;0;0;S;;15;
 kaffee;Kaffee / Espresso;kaffee|espresso|coffee;2;0.1;0;0;0;S;;15;
 wein;Weißwein / Rotwein;wein|weißwein|rotwein|white wine|red wine;83;0.1;2.6;0;0;S;;15;
@@ -279,7 +287,7 @@ export const CUP_G: Record<string, number> = {
   "griechischer-joghurt": 245, "griechischer-joghurt-0": 245, joghurt: 245, "joghurt-mager": 245, magerquark: 250, skyr: 245,
   "kichererbsen-dose": 164, kidneybohnen: 177, "schwarze-bohnen": 172, "tomaten-dose": 245, kokosmilch: 226, eiklar: 243,
   mandeln: 143, walnuesse: 117, cashews: 137, erdnuesse: 146, chiasamen: 160, rosinen: 145, datteln: 147,
-  "haehnchenbrust-c": 140, "putenbrust-c": 140, "hackfleisch-rind-c": 140,
+  "haehnchenbrust-c": 140, pommes: 85, proteinpudding: 245, proteinmilch: 245, "putenbrust-c": 140, "hackfleisch-rind-c": 140,
 };
 
 export const BASE_BY_ID = new Map(BASE_FOODS.map((f) => [f.id, f]));
