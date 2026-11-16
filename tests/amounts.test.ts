@@ -79,3 +79,38 @@ describe("Mengen aus MacroFactor-Screenshot", () => {
     });
   });
 });
+
+import { assignShots, cleanShotTitle } from "@/lib/amounts";
+
+describe("Mengen aus mehreren Screenshots für alle Rezepte", () => {
+  const ctx = { mappings: new Map(), customFoods: [] };
+  const gnocchi = { id: "g", title: "Cheeseburger Gnocchi", ingredients: MF.map((l) => resolveIngredient(parseMFIngredient(l), ctx)) };
+  const brownies = {
+    id: "b",
+    title: "Saftige Protein-Brownies",
+    ingredients: ["Banana (3 banana)", "Egg, Whole, Raw (3 egg)", "Skyr, Plain (30 g)", "Cocoa Powder, Unsweetened (1 tbsp)"].map((l) => resolveIngredient(parseMFIngredient(l), ctx)),
+  };
+  const pasta = { id: "p", title: "Cheeseburger Pasta", ingredients: gnocchi.ingredients.slice(1, 4) };
+
+  it("Titel aus der Titelleiste", () => {
+    expect(cleanShotTitle("Cheeseburger Gnocchi\n")).toBe("Cheeseburger Gnocchi");
+    expect(cleanShotTitle("< Saftige Protein-Brownies |\n")).toBe("Saftige Protein-Brownies");
+  });
+
+  it("ordnet Screenshots per Titel und Zutaten zu, auch ohne Titel", () => {
+    const { assigned, unassigned } = assignShots(
+      [
+        { index: 0, title: "Cheeseburger Gnocchi\n", text: OCR },
+        { index: 1, title: "", text: "Banana\n3 banana • 360g\nEgg, Whole, Raw\n3 egg • 150g\nCocoa Powder, Unsweetened\n1 tbsp • 5g" },
+        { index: 2, title: "Lotus Dessert", text: "Biscoff Spread\n1 tbsp • 15g" },
+      ],
+      [pasta, gnocchi, brownies],
+    );
+    expect(assigned.map((a) => a.recipe.id).sort()).toEqual(["b", "g"]);
+    const g = assigned.find((a) => a.recipe.id === "g")!;
+    expect(g.matches).toHaveLength(9);
+    const b = assigned.find((a) => a.recipe.id === "b")!;
+    expect(b.matches.map((m) => m.found.grams)).toEqual([360, 150, 5]);
+    expect(unassigned.map((u) => u.index)).toEqual([2]);
+  });
+});

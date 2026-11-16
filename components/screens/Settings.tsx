@@ -7,6 +7,7 @@ import { Screen, SwipeRow, useNav } from "../nav";
 import { Button, EmptyState, Group, ListRow, NumberField, Toggle, cx } from "../ui";
 import { CustomFoodForm } from "./FoodPicker";
 import { MFImportSheet } from "./MFImport";
+import { BatchAmountsSheet } from "./BatchAmounts";
 import { db, updateSettings } from "@/lib/db";
 import { restoreBackup, shareBackup } from "@/lib/backup";
 import { loadMatchContext, useRecipes, useSettings } from "@/lib/hooks";
@@ -20,6 +21,8 @@ export function SettingsScreen() {
   const recipes = useRecipes() ?? [];
   const fileRef = useRef<HTMLInputElement>(null);
   const mfRef = useRef<HTMLInputElement>(null);
+  const shotsRef = useRef<HTMLInputElement>(null);
+  const [shotsBusy, setShotsBusy] = useState<string | null>(null);
   const hasSamples = recipes.some((r) => r.sample);
   const foods = useLiveQuery(() => db.foods.count(), []) ?? 0;
 
@@ -46,9 +49,39 @@ export function SettingsScreen() {
           subtitle="Excel-Datei aus dem MacroFactor-Datenexport wählen"
           onClick={() => mfRef.current?.click()}
         />
+        <ListRow
+          icon="camera"
+          title="Mengen aus MacroFactor-Screenshots"
+          subtitle={shotsBusy ?? "Screenshots der Rezepte wählen – Gramm werden für alle eingetragen"}
+          onClick={() => !shotsBusy && shotsRef.current?.click()}
+        />
       </Group>
+      <input
+        ref={shotsRef}
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        onChange={async (e) => {
+          const files = Array.from(e.target.files ?? []);
+          e.target.value = "";
+          if (!files.length) return;
+          setShotsBusy("Screenshots werden gelesen …");
+          try {
+            const [{ ocrRecipeShots }, { assignShots }, recipes] = await Promise.all([import("@/lib/importer"), import("@/lib/amounts"), db.recipes.toArray()]);
+            const shots = await ocrRecipeShots(files, (i, total, p) => setShotsBusy(`Screenshot ${i + 1} von ${total} wird gelesen … ${Math.round(p * 100)} %`));
+            const { assigned, unassigned } = assignShots(shots, recipes);
+            if (!assigned.length) return nav.toast("Keinem Rezept zugeordnet – sind die Rezepte schon importiert?");
+            nav.openSheet((close) => <BatchAmountsSheet assigned={assigned} unassigned={unassigned} total={files.length} close={close} />, { full: true });
+          } catch {
+            nav.toast("Texterkennung fehlgeschlagen – beim ersten Mal ist Internet nötig");
+          } finally {
+            setShotsBusy(null);
+          }
+        }}
+      />
       <p className="mt-2 px-1 text-[13px] leading-relaxed text-muted">
-        In MacroFactor: Mehr → Datenverwaltung → Daten exportieren, Datei in „Dateien“ sichern. Hier auswählen, dann bestätigst du, welche Rezepte übernommen werden. Es wird nichts gelöscht.
+        In MacroFactor: Mehr → Datenverwaltung → Daten exportieren, Datei in „Dateien“ sichern. Hier auswählen, dann bestätigst du, welche Rezepte übernommen werden. Es wird nichts gelöscht. Die genauen Gramm holst du danach mit Screenshots der Rezepte aus MacroFactor (alle auf einmal auswählen).
       </p>
       <input
         ref={mfRef}

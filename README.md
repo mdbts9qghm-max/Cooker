@@ -6,6 +6,7 @@ Persönliche Rezeptbuch- und Wochenplaner-App fürs iPhone, als Web-App (PWA): R
 
 - **Erfassen** über das orange Plus: **Text einfügen** (kopierte Beschreibung aus Instagram, TikTok & Co.), **Screenshot** (Caption-Screenshots auf Deutsch oder Englisch, Texterkennung direkt auf dem iPhone, erkannter Text wird zur Bestätigung angezeigt) oder **Selber anlegen**.
 - **MacroFactor-Import**: Einstellungen → „Aus MacroFactor importieren“ liest den Excel-Datenexport von MacroFactor (Blatt „Recipes“) und übernimmt die ausgewählten Rezepte mit den Makros aus MacroFactor.
+- **Mengen aus MacroFactor-Screenshots**: Einstellungen → Screenshots aller Rezepte auf einmal wählen; die App erkennt Rezeptname und Gramm, ordnet sie den importierten Rezepten zu und trägt sie nach Bestätigung ein.
 - **Prüf-Bildschirm**: unsichere Erkennungen sind orange markiert, „roh oder gekocht?“ bei Reis, Nudeln, Fleisch usw., Duplikat-Hinweis.
 - **Nährwerte**: zuerst die mitgelieferte Basisliste (≈210 Grundzutaten, USDA), dann Open Food Facts (Suche & Barcode-Scan), eigene Lebensmittel. Eigene Zuordnungen merkt sich die App.
 - **Rezeptbuch** mit Suche, Tags, Favoriten, Sortierung (z. B. Protein pro 100 kcal), Wischen zum Löschen mit Rückgängig, Portionsrechner und Kochmodus (Bildschirm bleibt an).

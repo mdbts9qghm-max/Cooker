@@ -252,6 +252,46 @@ export async function ocrColumns(files: Blob[], onProgress?: (index: number, tot
   }
 }
 
+export type ShotText = { index: number; title: string; text: string };
+
+/**
+ * MacroFactor-Rezept-Screenshots lesen: Titelleiste oben über die volle Breite,
+ * darunter die zweispaltige Zutatenliste (linke und rechte Hälfte getrennt).
+ */
+export async function ocrRecipeShots(files: Blob[], onProgress?: (index: number, total: number, p: number) => void): Promise<ShotText[]> {
+  let current = 0;
+  let part = 0;
+  const worker = await makeWorker((p) => onProgress?.(current, files.length, (part + p) / 3));
+  try {
+    const out: ShotText[] = [];
+    for (let i = 0; i < files.length; i++) {
+      current = i;
+      const img = await prepareForOcr(files[i]);
+      const { width: w, height: h } = await createImageBitmap(img);
+      // Titelleiste: 5–13 % der Höhe, ohne den Zurück-Pfeil links, als einzelner Textblock lesen
+      const top = Math.round(h * 0.05);
+      const bandH = Math.round(h * 0.08);
+      const left = Math.round(w * 0.12);
+      part = 0;
+      await worker.setParameters({ tessedit_pageseg_mode: "6" as never });
+      const t = await worker.recognize(img, { rectangle: { left, top, width: w - left, height: bandH } });
+      await worker.setParameters({ tessedit_pageseg_mode: "3" as never });
+      const half = Math.floor(w / 2);
+      const cols: string[] = [];
+      const listTop = top + bandH;
+      for (let c = 0; c < 2; c++) {
+        part = c + 1;
+        const r = await worker.recognize(img, { rectangle: { left: c * half, top: listTop, width: c ? w - half : half, height: h - listTop } });
+        cols.push(r.data.text);
+      }
+      out.push({ index: i, title: t.data.text, text: cols.join("\n") });
+    }
+    return out;
+  } finally {
+    await worker.terminate();
+  }
+}
+
 export async function ocrImages(files: Blob[], onProgress?: (index: number, total: number, p: number) => void): Promise<string> {
   const { createWorker } = await import("tesseract.js");
   let current = 0;

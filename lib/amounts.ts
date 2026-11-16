@@ -85,3 +85,73 @@ export function matchAmounts(ings: Ingredient[], found: FoundAmount[]): { matche
   matches.sort((a, b) => order.get(a.ingredientId)! - order.get(b.ingredientId)!);
   return { matches, unmatched: found.filter((f) => !usedFound.has(f)) };
 }
+
+/** Titel aus der OCR-Titelleiste: Uhrzeit, Pfeil, Symbolreste entfernen */
+export function cleanShotTitle(raw: string): string {
+  return raw
+    .split("\n")
+    .map((l) => l.replace(/\b\d{1,2}:\d{2}\b/g, "").replace(/\b(5G|4G|LTE|wifi)\b/gi, "").replace(/^[^\p{L}\d]+/u, "").replace(/[^\p{L}\d!?)…]+$/u, "").trim())
+    .filter((l) => /\p{L}{3,}/u.test(l))
+    .sort((a, b) => b.length - a.length)[0] ?? "";
+}
+
+export type ShotInput = { index: number; title: string; text: string };
+export type RecipeLike = { id: string; title: string; ingredients: Ingredient[] };
+export type ShotAssignment = {
+  recipe: RecipeLike;
+  shots: number[];
+  title: string;
+  matches: AmountMatch[];
+  unmatched: FoundAmount[];
+};
+
+/**
+ * Screenshots den Rezepten zuordnen: Titel-Ähnlichkeit plus Anteil der Zutaten, die passen.
+ * Screenshots ohne erkennbaren Titel (weitergescrollt) zählen nur über die Zutaten.
+ */
+export function assignShots(shots: ShotInput[], recipes: RecipeLike[]): { assigned: ShotAssignment[]; unassigned: ShotInput[] } {
+  const byRecipe = new Map<string, { recipe: RecipeLike; shots: number[]; title: string; found: FoundAmount[] }>();
+  const unassigned: ShotInput[] = [];
+  for (const shot of shots) {
+    const title = cleanShotTitle(shot.title);
+    const found = parseAmountList(shot.text);
+    if (!found.length) {
+      unassigned.push(shot);
+      continue;
+    }
+    let best: { r: RecipeLike; score: number } | null = null;
+    for (const r of recipes) {
+      const t = norm(title);
+      const rt = norm(r.title);
+      let ts = t && rt ? similarity(t, rt) : 0;
+      if (t.length >= 6 && rt.length >= 6 && (rt.startsWith(t) || t.startsWith(rt) || rt.includes(t))) ts = Math.max(ts, 0.9);
+      const { matches } = matchAmounts(r.ingredients, found);
+      const ingShare = matches.length / Math.max(found.length, 1);
+      const score = ts * 2 + ingShare * 1.5;
+      if (!best || score > best.score) best = { r, score };
+    }
+    // mindestens: guter Titel ODER die meisten Zutaten passen
+    if (!best || best.score < 1.3) {
+      unassigned.push(shot);
+      continue;
+    }
+    const cur = byRecipe.get(best.r.id) ?? { recipe: best.r, shots: [], title, found: [] };
+    cur.shots.push(shot.index);
+    if (!cur.title && title) cur.title = title;
+    cur.found.push(...found);
+    byRecipe.set(best.r.id, cur);
+  }
+  const assigned = [...byRecipe.values()].map((x) => {
+    // überlappende Screenshots: gleiche Zeile nur einmal
+    const seen = new Set<string>();
+    const found = x.found.filter((f) => {
+      const k = `${norm(f.name)}|${f.grams}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    const { matches, unmatched } = matchAmounts(x.recipe.ingredients, found);
+    return { recipe: x.recipe, shots: x.shots, title: x.title, matches, unmatched };
+  });
+  return { assigned, unassigned };
+}
